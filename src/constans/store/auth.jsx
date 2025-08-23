@@ -22,14 +22,16 @@ export const AuthProvider = ({ children }) => {
         return localStorage.removeItem("token");
     }
 
+    
+
 
     // JWT authentication and get current login userdata
     const userAuthentication = async () => {
         let userToken = JSON.parse(token)
-        // console.log(userToken, 'ooo');
+        // console.log(userToken?.token, 'ooo');
         // return
         try {
-            const response = await axios.get(`${base_url}auth/user`, {
+            const response = await axios.get(`${base_url}auth/company`, {
                 headers: {
                     Authorization: `Bearer ${userToken?.token}`
                 }

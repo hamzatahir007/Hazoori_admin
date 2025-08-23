@@ -39,24 +39,24 @@ const Login = () => {
   });
 
   const authLoginAdmin = (props) => {
-    
+
     try {
-      axios.post(`${base_url}auth/login`, props)
+      axios.post(`${base_url}auth/companylogin`, props)
         .then(async (item) => {
           console.log(item.data);
-          if (item.data.isAdmin) { // Check if user isAdmin
-            // alert('Admin login successfull.');
-            storeTokenInLS(item?.data)
-            // navigate('admin')
-            alert(item.data?.msg)
-            setIsAdmin('Accepted')
-            window.location.reload();
+          // if (item.data.isAdmin) { // Check if user isAdmin
+          // alert('Admin login successfull.');
+          storeTokenInLS(item?.data)
+          // navigate('admin')
+          alert(item.data?.msg)
+          setIsAdmin('Accepted')
+          window.location.reload();
 
-            return;
-          }
-          else {
-            setIsAdmin('Rejected')
-          }
+          return;
+          // }
+          // else {
+          //   setIsAdmin('Rejected')
+          // }
         })
         .catch((e) => {
           if (e.request && e.request.response) {
