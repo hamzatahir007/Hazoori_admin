@@ -6,6 +6,9 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-d
 import MainLayout from './components/MainLayout.jsx';
 import Resetpassword from './pages/Resetpassword.jsx';
 import Forgotpassword from './pages/Forgotpassword.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import AddCompany from './pages/AddCompany.jsx';
+import Companylist from './pages/CompanyList.jsx';
 
 function App() {
   const { user, LogOutUser } = useAuth();
@@ -29,10 +32,13 @@ function App() {
           </>
           :
           <>
-          <Route path="/" element={<Navigate to="/admin" />} />
+            <Route path="/" element={<Navigate to="/admin" />} />
             <Route path="/admin" element={<MainLayout />}>
-              {/* <Route index element={<Dashboard />} />
-              <Route path="enquiries" element={<Enquiries />} />
+              <Route index element={<Dashboard />} />
+              <Route path="list-company" element={<Companylist />} />
+              <Route path="company" element={<AddCompany />} />
+              <Route path="company/:id" element={<AddCompany />} />
+              {/* <Route path="enquiries" element={<Enquiries />} />
               <Route path="enquiries/:id" element={<ViewEnq />} />
               <Route path="blog-list" element={<Bloglist />} />
               <Route path="blog" element={<Addblog />} />

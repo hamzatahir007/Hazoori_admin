@@ -1,16 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import {
   AiOutlineDashboard,
   AiOutlineShoppingCart,
   AiOutlineUser,
   AiOutlineBgColors,
+  AiOutlineHome,
+  AiOutlineUserAdd,
+  AiOutlineUnorderedList,
+  AiOutlineCheckSquare,
+  AiOutlineBarChart,
+  AiOutlineSetting,
 } from "react-icons/ai";
 import image from '../assets/hazoorilogo.png'
-import { RiCouponLine } from "react-icons/ri";
+import { RiCouponLine, RiUserSettingsLine } from "react-icons/ri";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { ImBlog } from "react-icons/im";
 import { IoIosNotifications } from "react-icons/io";
@@ -18,13 +24,16 @@ import { FaClipboardList, FaBloggerB } from "react-icons/fa";
 import { SiBrandfolder } from "react-icons/si";
 import { BiCategoryAlt } from "react-icons/bi";
 import '../index.css'
-import { Layout, Menu, theme } from "antd";
+import { Breadcrumb, Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../constans/store/auth";
 import { WEB_Color } from "../constans/Colors";
+import { MdAccessTime, MdOutlineWbSunny, MdSunny } from "react-icons/md";
+import { GoBell } from "react-icons/go";
 const { Header, Sider, Content } = Layout;
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [darkTheme, setdarkTheme] = useState(false);
   const [userData, setUserData] = useState(null);
   const {
     token: { colorBgContainer },
@@ -32,6 +41,7 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const { user, LogOutUser } = useAuth();
   // const { LogOutUser } = useAuth();
+  const location = useLocation();
 
   // console.log(user);
 
@@ -50,13 +60,29 @@ const MainLayout = () => {
     }
   }, [user])
 
+  const pathSnippets = location.pathname.split("/").filter(i => i);
+
+  const breadcrumbItems = [
+    <Breadcrumb.Item key="home" onClick={() => navigate("/")}>
+      Dashboard
+    </Breadcrumb.Item>,
+    ...pathSnippets.map((snippet, index) => {
+      const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
+      return (
+        <Breadcrumb.Item key={url} onClick={() => navigate(url)}>
+          {snippet.charAt(0).toUpperCase() + snippet.slice(1)} {/* Capitalize */}
+        </Breadcrumb.Item>
+      );
+    }),
+  ];
+
 
   return (
     <Layout /* onContextMenu={(e) => e.preventDefault()} */>
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div className="logo" style={{ backgroundColor: WEB_Color.main, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+        <div className="logo" style={{ backgroundColor: WEB_Color.transparent, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '70px', borderBottom: '.5px solid', borderColor: WEB_Color.gray }}>
           <h2 className="text-white fs-5 text-center py-3 mb-0">
-            <img src={image} alt="Description of the image" style={{ width: '50%', height: 'auto' }} />
+            <img src={image} alt="Description of the image" style={{ width: '70%', height: 'auto' }} />
           </h2>
         </div>
         <Menu
@@ -71,115 +97,143 @@ const MainLayout = () => {
           }}
           items={[
             {
-              key: "",
+              key: "/",
               icon: <AiOutlineDashboard className="fs-4" />,
               label: "Dashboard",
             },
             {
-              key: "customers",
-              icon: <AiOutlineUser className="fs-4" />,
-              label: "Customers",
-            },
-            {
-              key: "Catalog",
-              icon: <AiOutlineShoppingCart className="fs-4" />,
-              label: "Catalog",
+              key: "companies",
+              icon: <AiOutlineHome className="fs-4" />,
+              label: "Companies",
               children: [
                 {
-                  key: "product",
-                  icon: <AiOutlineShoppingCart className="fs-4" />,
-                  label: "Add Product",
+                  key: "company",
+                  icon: <AiOutlineHome className="fs-4" />,
+                  label: "Add Company",
                 },
                 {
-                  key: "list-product",
-                  icon: <AiOutlineShoppingCart className="fs-4" />,
-                  label: "Product List",
+                  key: "list-company",
+                  icon: <AiOutlineUnorderedList className="fs-4" />,
+                  label: "Company List",
                 },
-                // {
-                //   key: "brand",
-                //   icon: <SiBrandfolder className="fs-4" />,
-                //   label: "Brand",
-                // },
-                // {
-                //   key: "list-brand",
-                //   icon: <SiBrandfolder className="fs-4" />,
-                //   label: "Brand List ",
-                // },
-                {
-                  key: "category",
-                  icon: <BiCategoryAlt className="fs-4" />,
-                  label: "Category",
-                },
-                {
-                  key: "list-category",
-                  icon: <BiCategoryAlt className="fs-4" />,
-                  label: "Category List",
-                },
-                // {
-                //   key: "color",
-                //   icon: <AiOutlineBgColors className="fs-4" />,
-                //   label: "Color",
-                // },
-                // {
-                //   key: "list-color",
-                //   icon: <AiOutlineBgColors className="fs-4" />,
-                //   label: "Color List",
-                // },
               ],
             },
             {
-              key: "orders",
-              icon: <FaClipboardList className="fs-4" />,
-              label: "Orders",
+              key: "employees",
+              icon: <AiOutlineUser className="fs-4" />,
+              label: "Employees",
+              children: [
+                {
+                  key: "add-employee",
+                  icon: <AiOutlineUserAdd className="fs-4" />,
+                  label: "Add Employee",
+                },
+                {
+                  key: "list-employee",
+                  icon: <AiOutlineUnorderedList className="fs-4" />,
+                  label: "Employee List",
+                },
+              ],
             },
-            // {
-            //   key: "marketing",
-            //   icon: <RiCouponLine className="fs-4" />,
-            //   label: "Marketing",
-            //   children: [
-            //     {
-            //       key: "coupon",
-            //       icon: <ImBlog className="fs-4" />,
-            //       label: "Add Coupon",
-            //     },
-            //     {
-            //       key: "coupon-list",
-            //       icon: <RiCouponLine className="fs-4" />,
-            //       label: "Coupon List",
-            //     },
-            //   ],
-            // },
-            // {
-            //   key: "blogs",
-            //   icon: <FaBloggerB className="fs-4" />,
-            //   label: "Blogs",
-            //   children: [
-            //     {
-            //       key: "blog",
-            //       icon: <ImBlog className="fs-4" />,
-            //       label: "Add Blog",
-            //     },
-            //     {
-            //       key: "blog-list",
-            //       icon: <FaBloggerB className="fs-4" />,
-            //       label: "Blog List",
-            //     },
-            //     {
-            //       key: "blog-category",
-            //       icon: <ImBlog className="fs-4" />,
-            //       label: "Add Blog Category",
-            //     },
-            //     {
-            //       key: "blog-category-list",
-            //       icon: <FaBloggerB className="fs-4" />,
-            //       label: "Blog Category List",
-            //     },
-            //   ],
-            // },
             {
-              key: "enquiries",
+              key: "attendance",
               icon: <FaClipboardList className="fs-4" />,
-              label: "Enquiries",
+              label: "Attendance",
+              children: [
+                {
+                  key: "mark-attendance",
+                  icon: <AiOutlineCheckSquare className="fs-4" />,
+                  label: "Mark Attendance",
+                },
+                {
+                  key: "attendance-list",
+                  icon: <AiOutlineUnorderedList className="fs-4" />,
+                  label: "Attendance Records",
+                },
+                {
+                  key: "attendance-report",
+                  icon: <AiOutlineBarChart className="fs-4" />,
+                  label: "Reports",
+                },
+              ],
+            },
+            {
+              key: "departments",
+              icon: <BiCategoryAlt className="fs-4" />,
+              label: "Departments",
+              children: [
+                {
+                  key: "add-department",
+                  icon: <BiCategoryAlt className="fs-4" />,
+                  label: "Add Department",
+                },
+                {
+                  key: "list-department",
+                  icon: <AiOutlineUnorderedList className="fs-4" />,
+                  label: "Department List",
+                },
+              ],
+            },
+            {
+              key: "designations",
+              icon: <BiCategoryAlt className="fs-4" />,
+              label: "Designations",
+              children: [
+                {
+                  key: "add-designation",
+                  icon: <BiCategoryAlt className="fs-4" />,
+                  label: "Add Designation",
+                },
+                {
+                  key: "list-designation",
+                  icon: <AiOutlineUnorderedList className="fs-4" />,
+                  label: "Designation List",
+                },
+              ],
+            },
+            {
+              key: "shifts",
+              icon: <MdAccessTime className="fs-4" />,
+              label: "Shifts",
+              children: [
+                {
+                  key: "add-shift",
+                  icon: <MdAccessTime className="fs-4" />,
+                  label: "Add Shift",
+                },
+                {
+                  key: "list-shift",
+                  icon: <AiOutlineUnorderedList className="fs-4" />,
+                  label: "Shift List",
+                },
+              ],
+            },
+            {
+              key: "roles",
+              icon: <RiUserSettingsLine className="fs-4" />,
+              label: "Roles & Permissions",
+              children: [
+                {
+                  key: "add-role",
+                  icon: <RiUserSettingsLine className="fs-4" />,
+                  label: "Add Role",
+                },
+                {
+                  key: "list-role",
+                  icon: <AiOutlineUnorderedList className="fs-4" />,
+                  label: "Role List",
+                },
+              ],
+            },
+            {
+              key: "reports",
+              icon: <AiOutlineBarChart className="fs-4" />,
+              label: "Analytics & Reports",
+            },
+            {
+              key: "settings",
+              icon: <AiOutlineSetting className="fs-4" />,
+              label: "Settings",
             },
           ]}
         />
@@ -192,32 +246,51 @@ const MainLayout = () => {
             background: colorBgContainer,
           }}
         >
-          {React.createElement(
-            collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
-            {
-              className: "trigger",
-              onClick: () => setCollapsed(!collapsed),
-            }
-          )}
+          <div className="d-flex align-items-center gap-3">
+            {React.createElement(
+              collapsed ? MenuOutlined : MenuOutlined,
+              {
+                className: "trigger",
+                onClick: () => setCollapsed(!collapsed),
+              }
+            )}
+            <Breadcrumb>{breadcrumbItems}</Breadcrumb>
+          </div>
+
           <div className="d-flex gap-4 align-items-center">
             <div className="position-relative">
-              <IoIosNotifications className="fs-4" />
+              <GoBell className="fs-4" />
               <span className="badge bg-warning rounded-circle p-1 position-absolute">
                 3
               </span>
             </div>
+            <div className="position-relative">
+              {darkTheme ?
+                <MdSunny className="fs-4" onClick={() => setdarkTheme(!darkTheme)} />
+                :
+                <MdOutlineWbSunny className="fs-4" onClick={() => setdarkTheme(!darkTheme)} />
+              }
+            </div>
+
 
             {userData ?
               <div className="d-flex gap-3 align-items-center dropdown">
-                <div>
+                <div
+                  role="button"
+                  id="dropdownMenuLink"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
                   <img
-                    width={32}
-                    height={32}
+                    width={35}
+                    height={35}
                     src="https://stroyka-admin.html.themeforest.scompiler.ru/variants/ltr/images/customers/customer-4-64x64.jpg"
                     alt=""
+                    style={{
+                      borderRadius: 50,
+                    }}
                   />
                 </div>
-                <div
+                {/* <div
                   role="button"
                   id="dropdownMenuLink"
                   data-bs-toggle="dropdown"
@@ -225,7 +298,7 @@ const MainLayout = () => {
                 >
                   <h5 className="mb-0">{userData.username}</h5>
                   <p className="mb-0">{userData.email}</p>
-                </div>
+                </div> */}
                 <div className="dropdown-menu" aria-labelledby="dropdownMenuLink">
                   <li>
                     <Link
