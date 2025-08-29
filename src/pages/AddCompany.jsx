@@ -1,651 +1,434 @@
 import { React, useEffect, useState } from "react";
 import CustomInput from "../components/CustomInput";
-import ReactQuill from "react-quill";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import "react-quill/dist/quill.snow.css";
 import { toast } from "react-toastify";
 import * as yup from "yup";
 import { useFormik } from "formik";
-import { useDispatch, useSelector } from "react-redux";
-import { getBrands } from "../features/brand/brandSlice";
-import { getCategories } from "../features/pcategory/pcategorySlice";
-import { getColors } from "../features/color/colorSlice";
-import { Select } from "antd";
 import Dropzone from "react-dropzone";
-import { delImg, uploadImg } from "../features/upload/uploadSlice";
-import { createProducts, getProductId, resetState, updateProduct } from "../features/product/productSlice";
-import axios from "axios";
 import { base_imageurl, base_url } from "../utils/baseUrl";
+import axios from "axios";
+import { createCompany, getCompanyById, resetState, updateCompany } from "../features/company/companySlice";
+import MapModal from "../components/MapModal";
+import { WEB_Color } from "../constans/Colors";
+
 
 let schema = yup.object().shape({
-  title: yup.string().required("Title is Required"),
-  description: yup.string().required("Description is Required"),
-  price: yup.number().required("Price is Required"),
-  // brand: yup.string().required("Brand is Required"),
-  category: yup.string().required("Category is Required"),
-  tags: yup.string().required("Tag is Required"),
-  condition: yup.string().required("Condition is Required"),
-  bidtype: yup.string().required("Bidtype is Required"),
-  // color: yup
-  //   .array()
-  //   .min(1, "Pick at least one color")
-  //   .required("Color is Required"),
-  quantity: yup.number().required("Quantity is Required"),
-  // images: yup.number().required("images is Required"),
+  name: yup.string().required("Company Name is Required"),
+  email: yup.string().required("Email is Required"),
+  password: yup.string().required("Password is Required"),
+  address: yup.string().required("Address is Required"),
+  officeLocation: yup.string().required("Location is Required"),
+  radius: yup.string().required("Radius is Required"),
+  status: yup.string().required("Status is Required"),
+  image: yup.mixed().nullable(),
 });
+
 const AddCompany = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [mapVisible, setMapVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
-  const getPId = location.pathname.split("/")[3];
-  const [color, setColor] = useState([]);
-  const [images, setImages] = useState([]);
-  // console.log(color);
-  useEffect(() => {
-    // dispatch(getBrands());
-    // dispatch(getCategories());
-    // dispatch(getColors());
-  }, []);
-
-  const brandState = useSelector((state) => state.brand.brands);
-  const catState = useSelector((state) => state.pCategory.pCategories);
-  const colorState = useSelector((state) => state.color.colors);
-  const imgState = useSelector((state) => state.upload.images);
-  const newProduct = useSelector((state) => state.product);
-  const { isSuccess, isError, isLoading, createdProduct, updatedProduct } = newProduct;
+  const getPCatId = location.pathname.split("/")[3];
+  const navigate = useNavigate();
+  const newCategory = useSelector((state) => state.company);
+  const {
+    isSuccess,
+    isError,
+    isLoading,
+    createdCompany,
+    companyName,
+    updatedCompany,
+  } = newCategory;
+  // console.log(newCategory);
 
   useEffect(() => {
-    //  console.log( getPCatId);
+    console.log(getPCatId);
     //   return
-    if (getPId !== undefined) {
-      // console.log(getPId, 'Pid');
-      dispatch(getProductId(getPId))
+    if (getPCatId !== undefined) {
+      dispatch(getCompanyById(getPCatId))
         .then((data) => {
-          let productDetails = data?.payload;
-          // console.log(productDetails.images , 'checking');
-          // return
-          formik.setValues(productDetails)
-          setImages(productDetails.images)
-          // formik.setFieldValue('name', data.payload.name); // Set the selected image to the form field
-          // formik.setFieldValue('image', base_imageurl + data.payload.image); // Set the selected image to the form field
+          // console.log(data.payload,'====');
+          formik.setFieldValue('name', data.payload.name); // Set the selected image to the form field
+          formik.setFieldValue('image', base_imageurl + data.payload.image); // Set the selected image to the form field
 
         })
     } else {
       dispatch(resetState());
     }
-  }, [getPId]);
-
+  }, [getPCatId]);
 
   useEffect(() => {
-    if (isSuccess && createdProduct) {
-      toast.success("Product Added Successfullly!");
+    if (isSuccess && createdCompany) {
+      toast.success("Company Added Successfullly!");
     }
-    if (isSuccess && updatedProduct) {
-      toast.success("Product updated Successfullly!");
+    if (isSuccess && updatedCompany) {
+      toast.success("Company Updated Successfullly!");
+      navigate("/admin/list-company");
     }
     if (isError) {
       toast.error("Something Went Wrong!");
     }
   }, [isSuccess, isError, isLoading]);
-  // const coloropt = [];
-  // colorState?.forEach((i) => {
-  //   coloropt.push({
-  //     label: i.title,
-  //     value: i._id,
-  //   });
-  // });
-  const img = [];
-  images?.forEach((i) => {
-    // console.log(i,'helo');
-    img.push(i);
-  });
 
-  // console.log(images,'helo');
 
-  function convertTo14Hour(time24h) {
-    const endDateTime = new Date(`${formik.values.endDateTime}T${time24h}`);
-
-    console.log(time24h, endDateTime);
-    return
-    // Extracting hours and minutes from the time string
-    var match = time24h.match(/^(\d+):(\d+)$/);
-    if (!match) return null;
-
-    var hours = parseInt(match[1]);
-    var minutes = parseInt(match[2]);
-
-    // Modifying hours for 14-hour format
-    var period = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12;
-    hours = hours ? hours : 12; // Convert 0 to 12
-
-    // Formatting the hours and minutes into 14-hour format
-    var hours14 = hours.toString().padStart(2, "0");
-    var minutes14 = minutes.toString().padStart(2, "0");
-
-    return `${hours14}:${minutes14} ${period}`;
-  }
-
-  useEffect(() => {
-    formik.values.color = color ? color : " ";
-    formik.values.images = img;
-  }, [color, img]);
   const formik = useFormik({
+    // enableReinitialize: true,
     initialValues: {
-      title: "",
-      description: "",
-      price: "",
-      rate: "",
-      category: "",
-      tags: "",
-      condition: "",
-      bidtype: "",
-      startDate: "",
-      startTime: "",
-      expiryDate: "",
-      expiryTime: "",
-      quantity: "",
-      images: [],
+      name: "",
+      email: "",
+      password: "",
+      address: "",
+      officeLocation: "",
+      radius: "",
+      status: "",
+      image: "",
     },
     validationSchema: schema,
-    onSubmit: (values) => {
-      if (values.images?.length == 0) {
-        alert('Please add atleast one product image.')
-        return
-      }
-      if (values.bidtype == 'Auction') {
-        if (values.startDate == "" || values.startTime == "") {
-          alert('Please select Auction start Date/Time.')
+
+    onSubmit: async (values) => {
+
+      const [lat, lng] = values.officeLocation.split(",").map(Number);
+      values.officeLocation = { lat, lng };
+      // console.log(values , getPCatId);
+      // return
+      if (getPCatId !== undefined) {
+        const data = { id: getPCatId, pCatData: values };
+
+        let CheckImageStatus = /^http:\/\//.test(values?.image) && typeof values?.image === 'string' ? true : false;
+        // console.log(data, CheckImageStatus);
+        // return
+        if (!CheckImageStatus) {
+          let formimage = new FormData()
+          formimage.append('files', values?.image,);
+          axios.post(`${base_url}image`, formimage)
+            .then(async (response) => {
+              // console.log(response.status);
+              if (response.status === 200) {
+                let updateValue = {
+                  ...data,
+                  pCatData: {
+                    ...data.pCatData,
+                    image: `images/${response.data.data.filename}`
+                  }
+                };
+                // console.log(updateValue, 'success');
+                // return
+                dispatch(updateCompany(updateValue));
+                dispatch(resetState());
+              }
+            })
+            .catch((err) => {
+              alert("Server Error:", err)
+            })
           return
         }
-        if (values.expiryDate == "" || values.expiryTime == "") {
-          alert('Please select Auction end Date/Time.')
+        else {
+          const imageName = values.image.match(/\/images\/(.*)$/)[1];
+          let updateValue = {
+            ...data,
+            pCatData: {
+              ...data.pCatData,
+              image: `images/${imageName}`
+            }
+          };
+          dispatch(updateCompany(updateValue));
+          dispatch(resetState());
+        }
+      } else {
+
+        if (values.image) {
+
+          let formimage = new FormData()
+          formimage.append('files', values.image,);
+
+          axios.post(`${base_url}image`, formimage)
+            .then(async (data) => {
+              if (data.status == 200) {
+                let updateValue = {
+                  ...values,
+                  image: `images/${data.data.data.filename}`
+                }
+                dispatch(createCompany(updateValue))
+                  .then((response) => {
+                    if (response?.payload?.response?.status == 400) {
+                      alert(response.payload.response.data.message);
+                      setLoading(false)
+                      return
+                    }
+                    alert(response?.payload?.msg)
+                    formik.resetForm();
+                    setTimeout(() => {
+                      dispatch(resetState());
+                    }, 300);
+                  })
+                  .catch((error) => {
+                    alert("Error creating category:", error)
+                    console.error("Error creating category:", error);
+                  });
+              }
+              // if(data?.status == true)
+            })
+            .catch((err) => {
+              alert("Server Error:", err)
+            })
           return
         }
-        handleSubmit(values)
-        return
+        else {
+          dispatch(createCompany(values))
+            .then((response) => {
+              // console.log(response);
+              
+              if (response?.payload?.status) {
+                alert(response.payload.message);
+                setLoading(false)
+                formik.resetForm();
+                setTimeout(() => {
+                  dispatch(resetState());
+                }, 300);
+                return
+              }
+              else{
+                alert(response?.payload)
+              }
+            })
+            .catch((error) => {
+              alert("Error creating category:", error)
+              console.error("Error creating category:", error);
+            });
+        }
+
       }
-      handleSubmit(values)
-      // let uploadimages = values.images.length > 0 && Promise.all(values.images.map(async (img) => {
-      //   if (typeof img === 'object' && 'url' in img) {
-      //     return img
-      //   }
-      //   try {
-      //     let formimage = new FormData()
-      //     formimage.append('files', img,);
-      //     let response = await axios.post(`${base_url}image`, formimage);
-      //     if (response.status === 200) {
-      //       // console.log(response.data, 'kkkk');
-      //       return {
-      //         public_id: response.data.data.filename,
-      //         url: `images/${response.data.data.filename}`
-      //       }
-      //     }
-      //     return
-      //   } catch (e) {
-      //     console.log('Image Server Error: ', e);
-      //   }
-      // }))
-      // if (getPId !== undefined) {
-      //   uploadimages
-      //     .then((results) => {
-      //       let updateValue = {
-      //         ...values,
-      //         images: results
-      //       }
-      //       // console.log(updateValue, 'update');
-      //       dispatch(updateProduct(updateValue))
-      //         .then((res) => {
-      //           if (res?.payload?.res?.status == 400) {
-      //             alert(res.payload.response.data.message);
-      //             // setLoading(false)
-      //             return
-      //           }
-      //           // console.log(res);
-      //           alert(res?.payload?.msg)
-      //           // return
-      //           formik.resetForm();
-      //           setImages([])
-      //           setTimeout(() => {
-      //             dispatch(resetState());
-      //           }, 3000);
-      //         })
-      //         .catch((err) => {
-      //           alert(`Server Error: Please try again, ${err}`)
-      //         })
-      //     })
-      //     .catch((err) => {
-      //       console.log(err);
-      //     })
-      //   return
-      // }
-
-      // uploadimages.then((results) => {
-      //   let updateValue = {
-      //     ...values,
-      //     images: results
-      //   }
-
-      //   // console.log(updateValue, 'create new');
-      //   // return
-      //   dispatch(createProducts(updateValue))
-      //     .then((res) => {
-      //       // console.log(res);
-      //       if (res?.payload?.res?.status == 400) {
-      //         alert(res.payload.response.data.message);
-      //         // setLoading(false)
-      //         return
-      //       }
-      //       alert(res?.payload?.msg)
-      //       formik.resetForm();
-      //       setColor(null);
-      //       setTimeout(() => {
-      //         dispatch(resetState());
-      //       }, 3000);
-      //     })
-      //   // console.log(updateValue, '======>'); // Array of uploaded image data
-      // }).catch((err) => {
-      //   console.log('Image Server Error: ', err);
-      // });
-
-      return
     },
   });
 
-  const handleSubmit = async (values) => {
-// console.log(values);
-//     return
-    let uploadimages = values.images.length > 0 && Promise.all(values.images.map(async (img) => {
-      if (typeof img === 'object' && 'url' in img) {
-        return img
-      }
-      try {
-        let formimage = new FormData()
-        formimage.append('files', img,);
-        let response = await axios.post(`${base_url}image`, formimage);
-        if (response.status === 200) {
-          // console.log(response.data, 'kkkk');
-          return {
-            public_id: response.data.data.filename,
-            url: `images/${response.data.data.filename}`
-          }
-        }
-        return
-      } catch (e) {
-        console.log('Image Server Error: ', e);
-      }
-    }))
-    if (getPId !== undefined) {
-      uploadimages
-        .then((results) => {
-          let updateValue = {
-            ...values,
-            images: results
-          }
-          // console.log(updateValue, 'update');
-          dispatch(updateProduct(updateValue))
-            .then((res) => {
-              if (res?.payload?.res?.status == 400) {
-                alert(res.payload.response.data.message);
-                // setLoading(false)
-                return
-              }
-              // console.log(res);
-              alert(res?.payload?.msg)
-              // return
-              formik.resetForm();
-              setImages([])
-              setTimeout(() => {
-                dispatch(resetState());
-              }, 3000);
-            })
-            .catch((err) => {
-              alert(`Server Error: Please try again, ${err}`)
-            })
-        })
-        .catch((err) => {
-          console.log(err);
-        })
-      return
-    }
+  const uploadImg = (props) => {
+    const image = props[0];
+    // console.log(url);
+    // return
+    setSelectedImage(image);
 
-    uploadimages.then((results) => {
-      let updateValue = {
-        ...values,
-        images: results
-      }
+    // console.log(props);
+    formik.setFieldValue('image', image); // Set the selected image to the form field
 
-      // console.log(updateValue, 'create new');
-      // return
-      dispatch(createProducts(updateValue))
-        .then((res) => {
-          // console.log(res);
-          if (res?.payload?.res?.status == 400) {
-            alert(res.payload.response.data.message);
-            // setLoading(false)
-            return
-          }
-          alert(res?.payload?.msg)
-          formik.resetForm();
-          setColor(null);
-          setImages([])
-          setTimeout(() => {
-            dispatch(resetState());
-          }, 3000);
-        })
-      // console.log(updateValue, '======>'); // Array of uploaded image data
-    }).catch((err) => {
-      console.log('Image Server Error: ', err);
-    });
   }
-  const handleColors = (e) => {
-    setColor(e);
-    console.log(color);
-  };
 
 
-  const uploadImg = (acceptedFiles) => {
-    const newImages = [...images, ...acceptedFiles];
-    setImages(newImages);
-    // formik.setFieldValue('images', newImages); // Set the selected image to the form field
-  }
-  const DeletImgFromState = (deleteFiles) => {
-    if (typeof deleteFiles === 'object' && deleteFiles instanceof File) {
-      const removeimg = images.filter(item => item != deleteFiles)
-      setImages(removeimg);
-      return
-    } else if (typeof deleteFiles === 'object' && 'url' in deleteFiles) {
-      // Image fetched from server
-      // console.log(deleteFiles, 'url');
-      dispatch(delImg(deleteFiles.public_id))
-        .then((responce) => {
-          // console.log(responce);
-          const removeimg = images.filter(item => item != deleteFiles)
-          setImages(removeimg);
-        })
-        .catch((e) => {
-          alert(`Error remove image : ${e}`)
-          console.log(e);
-        })
-
-      return
-    }
-  }
   return (
     <div>
-      <h3 className="mb-4 title">Add Product</h3>
+      <h3 className="mb-4  title">
+        {getPCatId !== undefined ? "Edit" : "Add"} Company
+      </h3>
       <div>
-        <form
-          onSubmit={formik.handleSubmit}
-          className="d-flex gap-3 flex-column"
-        >
-          <CustomInput
-            type="text"
-            label="Enter Product Title"
-            name="title"
-            onChng={formik.handleChange("title")}
-            onBlr={formik.handleBlur("title")}
-            val={formik.values.title}
-          />
-          <div className="error">
-            {formik.touched.title && formik.errors.title}
-          </div>
-          <div className="">
-            <ReactQuill
-              theme="snow"
-              name="description"
-              onChange={formik.handleChange("description")}
-              value={formik.values.description}
+        <form action="" onSubmit={formik.handleSubmit}>
+          <div className="mb-4">
+            <label>Name</label>
+            <CustomInput
+              type="text"
+              label="Enter Company Name"
+              onChng={formik.handleChange("name")}
+              onBlr={formik.handleBlur("name")}
+              val={formik.values.name}
+              id="brand"
             />
-          </div>
-          <div className="error">
-            {formik.touched.description && formik.errors.description}
-          </div>
-          <CustomInput
-            type="number"
-            label="Enter Product Price"
-            name="price"
-            onChng={formik.handleChange("price")}
-            onBlr={formik.handleBlur("price")}
-            val={formik.values.price}
-          />
-          <div className="error">
-            {formik.touched.price && formik.errors.price}
-          </div>
-          {/* <select
-            name="brand"
-            onChange={formik.handleChange("brand")}
-            onBlur={formik.handleBlur("brand")}
-            value={formik.values.brand}
-            className="form-control py-3 mb-3"
-            id=""
-          >
-            <option value="">Select Brand</option>
-            {brandState.map((i, j) => {
-              return (
-                <option key={j} value={i.title}>
-                  {i.title}
-                </option>
-              );
-            })}
-          </select>
-          <div className="error">
-            {formik.touched.brand && formik.errors.brand}
-          </div> */}
-          <select
-            name="category"
-            onChange={formik.handleChange("category")}
-            onBlur={formik.handleBlur("category")}
-            value={formik.values.category}
-            className="form-control py-3 mb-3"
-            id=""
-          >
-            <option value="">Select Category</option>
-            {catState.map((i, j) => {
-              return (
-                <option key={j} value={i.name}>
-                  {i.name}
-                </option>
-              );
-            })}
-          </select>
-          <div className="error">
-            {formik.touched.category && formik.errors.category}
-          </div>
-          <select
-            name="tags"
-            onChange={formik.handleChange("tags")}
-            onBlur={formik.handleBlur("tags")}
-            value={formik.values.tags}
-            className="form-control py-3 mb-3"
-            id=""
-          >
-            <option value="">
-              Select Category Tag
-            </option>
-            <option value="featured">Featured</option>
-            <option value="popular">Popular</option>
-            <option value="special">Special</option>
-          </select>
-          <div className="error">
-            {formik.touched.tags && formik.errors.tags}
-          </div>
-
-          <select
-            name="tags"
-            onChange={formik.handleChange("condition")}
-            onBlur={formik.handleBlur("condition")}
-            value={formik.values.condition}
-            className="form-control py-3 mb-3"
-            id=""
-          >
-            <option value="">
-              Select Condition
-            </option>
-            <option value="New">New</option>
-            <option value="Used">Used</option>
-          </select>
-          <div className="error">
-            {formik.touched.condition && formik.errors.condition}
-          </div>
-
-          <select
-            name="tags"
-            onChange={formik.handleChange("bidtype")}
-            onBlur={formik.handleBlur("bidtype")}
-            value={formik.values.bidtype}
-            className="form-control py-3 mb-3"
-            id=""
-          >
-            <option value="">
-              Select Bidding Type
-            </option>
-            <option value="Auction">Auction</option>
-            <option value="Offer">Offer</option>
-          </select>
-          <div className="error">
-            {formik.touched.bidtype && formik.errors.bidtype}
-          </div>
-          {formik.values.bidtype == 'Auction' ?
-            <div style={{ display: "flex", gap: "20px" }}>
-              <div style={{ flex: 1, zIndex: 1 }}>
-                <div style={{
-                  fontWeight: 'bold'
-                }}>
-                  Auction Start
-                </div>
-                <CustomInput
-                  type="date"
-                  name="start"
-                  onChng={formik.handleChange("startDate")}
-                  onBlr={formik.handleBlur("startDate")}
-                  val={formik.values.startDate}
-                  label="Enter start Date"
-                  id="date"
-                />
-                <CustomInput
-                  type="time"
-                  name="start"
-                  onChng={formik.handleChange("startTime")}
-                  onBlr={formik.handleBlur("startTime")}
-                  val={formik.values.startTime}
-                  label="Enter start Time"
-                  id="time"
-                />
-                {/* <CustomDateTimeInput
-                  label="Enter start Date and Time"
-                  i_class="start-date-time"
-                  val={formik.values.start}
-                  onChange={(value) => formik.setFieldValue('start', value)}
-                /> */}
-              </div>
-              <div style={{ flex: 1, zIndex: 1 }}>
-                <div style={{
-                  fontWeight: 'bold'
-                }}>
-                  Auction End
-                </div>
-                <CustomInput
-                  type="date"
-                  name="expiry"
-                  onChng={formik.handleChange("expiryDate")}
-                  onBlr={formik.handleBlur("expiryDate")}
-                  val={formik.values.expiryDate}
-                  label="Enter Expiry Date"
-                  id="date"
-                />
-                <CustomInput
-                  type="time"
-                  name="expiry"
-                  onChng={formik.handleChange("expiryTime")}
-                  onBlr={formik.handleBlur("expiryTime")}
-                  val={formik.values.expiryTime}
-                  label="Enter Expiry Time"
-                  id="time"
-                />
-                {/* <CustomDateTimeInput
-                  label="Enter Expiry Date and Time"
-                  i_class="expiry-date-time"
-                  val={formik.values.expiry}
-                  onChange={(value) => formik.setFieldValue('expiry', value)}
-                /> */}
-              </div>
+            <div className="error">
+              {formik.touched.name && formik.errors.name}
             </div>
-            : null}
-          {/* <Select
-            mode="multiple"
-            allowClear
-            className="w-100"
-            placeholder="Select colors"
-            defaultValue={color}
-            onChange={(i) => handleColors(i)}
-            options={coloropt}
-          />
-          <div className="error">
-            {formik.touched.color && formik.errors.color}
-          </div> */}
-          <CustomInput
-            type="number"
-            label="Enter Product Quantity"
-            name="quantity"
-            onChng={formik.handleChange("quantity")}
-            onBlr={formik.handleBlur("quantity")}
-            val={formik.values.quantity}
-          />
-          <div className="error">
-            {formik.touched.quantity && formik.errors.quantity}
           </div>
-          <div className="bg-white border-1 p-5 text-center">
-            <Dropzone
-              onDrop={uploadImg}
+
+          <div className="mb-4">
+            <label>Email</label>
+            <CustomInput
+              type="email"
+              label="Enter Company Email"
+              onChng={formik.handleChange("email")}
+              onBlr={formik.handleBlur("email")}
+              val={formik.values.email}
+              id="email"
+            />
+            <div className="error">
+              {formik.touched.email && formik.errors.email}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label>Password</label>
+            <CustomInput
+              type="password"
+              label="Enter Password"
+              onChng={formik.handleChange("password")}
+              onBlr={formik.handleBlur("password")}
+              val={formik.values.password}
+              id="password"
+            />
+            <div className="error">
+              {formik.touched.password && formik.errors.password}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label>Company Address</label>
+            <CustomInput
+              type="text"
+              label="Enter Company Address"
+              onChng={formik.handleChange("address")}
+              onBlr={formik.handleBlur("address")}
+              val={formik.values.address}
+              id="address"
+            />
+            <div className="error">
+              {formik.touched.address && formik.errors.address}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label>Company Location</label>
+            <div className="d-flex">
+              <input
+                type="text"
+                className="form-control"
+                value={formik.values.officeLocation}
+                readOnly
+              />
+              <button
+                type="button"
+                className="btn ms-0"
+                style={{ backgroundColor: WEB_Color.main, fontSize: 14, color: WEB_Color.white }}
+                onClick={() => setMapVisible(true)}
+              >
+                Pick Location
+              </button>
+            </div>
+            <div className="error">
+              {formik.touched.officeLocation && formik.errors.officeLocation}
+            </div>
+          </div>
+          {/* <CustomInput
+            type="text"
+            label="Enter Company Location"
+            onChng={formik.handleChange("officeLocation")}
+            onBlr={formik.handleBlur("officeLocation")}
+            val={formik.values.officeLocation}
+            id="officeLocation"
+          />
+          <div className="error">
+            {formik.touched.officeLocation && formik.errors.officeLocation}
+          </div> */}
+          <div className="mb-4">
+            <label>Area Radius</label>
+            <CustomInput
+              type="number"
+              label="Enter Company radius"
+              onChng={formik.handleChange("radius")}
+              onBlr={formik.handleBlur("radius")}
+              val={formik.values.radius}
+              id="radius"
+            />
+            <div className="error">
+              {formik.touched.radius && formik.errors.radius}
+            </div>
+          </div>
+          {/* <CustomInput
+            type="text"
+            label="Select status"
+            onChng={formik.handleChange("status")}
+            onBlr={formik.handleBlur("status")}
+            val={formik.values.status}
+            id="status"
+          />
+          <div className="error">
+            {formik.touched.status && formik.errors.status}
+          </div> */}
+
+          {/* Status dropdown */}
+          <div className="mb-4">
+            <label>Status</label>
+            <select
+              className="form-select"
+              value={formik.values.status}
+              onChange={(e) => formik.setFieldValue("status", e.target.value)}
             >
+              <option value="">Select Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <div className="error">
+              {formik.touched.status && formik.errors.status}
+            </div>
+          </div>
+
+
+          <div className="bg-white border-1 p-5 text-center" style={{ marginTop: 20 }}>
+            <Dropzone onDrop={uploadImg} accept="image/*">
               {({ getRootProps, getInputProps }) => (
-                <section>
-                  <div {...getRootProps()}>
-                    <input {...getInputProps()} />
-                    <p>
-                      Drag 'n' drop some files here, or click to select files
-                    </p>
-                  </div>
+                <section style={{ marginTop: 0 }}>
+                  {formik.values.image ? (
+                    <div onClick={uploadImg}>
+                      {
+                        formik?.values.image ? (
+                          typeof formik.values.image === 'string' && /^https:\/\//.test(formik?.values?.image) ? (
+                            // If image URL is from the server
+                            <>
+                              <h3 style={{ fontSize: 18 }}>Selected Image: {formik?.values?.image.split('/').pop()}</h3>
+                              <img
+                                src={formik?.values?.image}
+                                alt="Selected"
+                                style={{ maxWidth: '100%', maxHeight: '200px' }}
+                              />
+                            </>
+                          ) : (
+                            // console.log(formik),
+
+                            // If image is from local storage
+                            <>
+                              <h3 style={{ fontSize: 18 }}>Selected Image: {formik?.values?.image?.name}</h3>
+                              <img
+                                src={
+                                  typeof formik?.values?.image === 'string'
+                                    ? formik.values.image // Use the URL if it's already uploaded
+                                    : formik?.values?.image instanceof Blob
+                                      ? URL.createObjectURL(formik.values.image) // Use object URL for preview if it's a File object
+                                      : ''
+                                }
+                                alt="Selected"
+                                style={{ maxWidth: '100%', maxHeight: '200px' }}
+                              />
+                            </>
+                          )) : null
+                      }
+                    </div>
+                  ) : (
+                    <div {...getRootProps()}>
+                      <input {...getInputProps()} />
+                      <p>Drag 'n' drop some files here, or click to select files</p>
+                    </div>
+                  )}
                 </section>
               )}
             </Dropzone>
           </div>
           <div className="error">
-            {formik.touched.images && formik.errors.images}
-          </div>
-          <div className="showimages d-flex flex-wrap gap-3">
-            {images?.map((image, j) => {
-              let imageUrl;
-              if (typeof image === 'object' && image instanceof File) {
-                // Image selected from local PC
-                imageUrl = URL.createObjectURL(image);
-              } else if (typeof image === 'object' && 'url' in image) {
-                // Image fetched from server
-                imageUrl = base_imageurl + image.url;
-              }
-              // return
-              return (
-                <div className=" position-relative" key={j}>
-                  <button
-                    type="button"
-                    onClick={() => DeletImgFromState(image)}
-                    className="btn-close position-absolute"
-                    style={{ top: "10px", right: "10px" }}
-                  ></button>
-                  <img src={imageUrl} alt="" width={200} height={200} />
-                </div>
-              );
-            })}
+            {formik.touched.image && formik.errors.image}
           </div>
           <button
             className="btn btn-success border-0 rounded-3 my-5"
             type="submit"
           >
-            Add Product
+            {getPCatId !== undefined ? "Edit" : "Add"} Category
           </button>
         </form>
       </div>
+
+
+      {/* Map Modal */}
+      <MapModal
+        visible={mapVisible}
+        onClose={() => setMapVisible(false)}
+        onConfirm={(coords) => {
+          formik.setFieldValue("officeLocation", `${coords.lat},${coords.lng}`);
+        }}
+      />
     </div>
   );
 };

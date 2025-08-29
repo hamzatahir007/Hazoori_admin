@@ -1,56 +1,58 @@
 import { createSlice, createAsyncThunk, createAction } from "@reduxjs/toolkit";
-import pCategoryService from "./pcategoryService";
+import companyService from "./companyService";
 
-export const getCategories = createAsyncThunk(
-  "productCategory/get-categories",
+export const getCompany = createAsyncThunk(
+  "company/get-companies",
   async (thunkAPI) => {
     try {
-      return await pCategoryService.getProductCategories();
+      return await companyService.getCompany();
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
     }
   }
 );
 
-export const createCategory = createAsyncThunk(
-  "productCategory/create-category",
+export const createCompany = createAsyncThunk(
+  "company/create-company",
   async (categoryData, thunkAPI) => {
     // console.log(categoryData,'yess');
     // return
     try {
-      return await pCategoryService.createCategory(categoryData);
+      return await companyService.createCompany(categoryData);
     } catch (error) {
-      return thunkAPI.rejectWithValue(error);
+      const message = error.response?.data?.message || error.message || "Something went wrong";
+      // console.log('yess' , message , error);
+      return thunkAPI.rejectWithValue(message);
     }
   }
 );
 
-export const updateAProductCategory = createAsyncThunk(
-  "productCategory/update-category",
+export const updateCompany = createAsyncThunk(
+  "company/update-company",
   async (category, thunkAPI) => {
     try {
-      return await pCategoryService.updateProductCategory(category);
+      return await companyService.updateCompany(category);
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
     }
   }
 );
 
-export const deleteAProductCategory = createAsyncThunk(
-  "productCategory/delete-category",
+export const deleteCompany = createAsyncThunk(
+  "company/delete-company",
   async (id, thunkAPI) => {
     try {
-      return await pCategoryService.deleteProductCategory(id);
+      return await companyService.deleteCompanyById(id);
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
     }
   }
 );
-export const getAProductCategory = createAsyncThunk(
-  "productCategory/get-product-category",
+export const getCompanyById = createAsyncThunk(
+  "company/get-companyById",
   async (id, thunkAPI) => {
     try {
-      return await pCategoryService.getProductCategory(id);
+      return await companyService.getCompanyById(id);
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
     }
@@ -59,88 +61,89 @@ export const getAProductCategory = createAsyncThunk(
 export const resetState = createAction("RevertAll");
 
 const initialState = {
-  pCategories: [],
+  company: [],
   isError: false,
   isLoading: false,
   isSuccess: false,
   message: "",
 };
-export const pCategorySlice = createSlice({
-  name: "pCategories",
+export const companySlice = createSlice({
+  name: "company",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(getCategories.pending, (state) => {
+      .addCase(getCompany.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(getCategories.fulfilled, (state, action) => {
+      .addCase(getCompany.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.isSuccess = true;
-        state.pCategories = action.payload;
+        state.company = action.payload;
       })
-      .addCase(getCategories.rejected, (state, action) => {
+      .addCase(getCompany.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.isSuccess = false;
+        // state.message = action.error;
+        state.message = action.payload || action.error.message; // only strings
+      })
+      .addCase(createCompany.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(createCompany.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isError = false;
+        state.isSuccess = true;
+        state.createdCompany = action.payload;
+      })
+      .addCase(createCompany.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;
         state.message = action.error;
       })
-      .addCase(createCategory.pending, (state) => {
+      .addCase(updateCompany.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(createCategory.fulfilled, (state, action) => {
+      .addCase(updateCompany.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.isSuccess = true;
-        state.createdCategory = action.payload;
+        state.updatedCompany = action.payload;
       })
-      .addCase(createCategory.rejected, (state, action) => {
+      .addCase(updateCompany.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;
         state.message = action.error;
       })
-      .addCase(updateAProductCategory.pending, (state) => {
+      .addCase(deleteCompany.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(updateAProductCategory.fulfilled, (state, action) => {
+      .addCase(deleteCompany.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.isSuccess = true;
-        state.updatedCategory = action.payload;
+        state.deletedCompany = action.payload;
       })
-      .addCase(updateAProductCategory.rejected, (state, action) => {
+      .addCase(deleteCompany.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;
         state.message = action.error;
       })
-      .addCase(deleteAProductCategory.pending, (state) => {
+      .addCase(getCompanyById.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(deleteAProductCategory.fulfilled, (state, action) => {
+      .addCase(getCompanyById.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.isSuccess = true;
-        state.deletedCategory = action.payload;
+        state.companyName = action.payload.name;
       })
-      .addCase(deleteAProductCategory.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.isSuccess = false;
-        state.message = action.error;
-      })
-      .addCase(getAProductCategory.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(getAProductCategory.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isError = false;
-        state.isSuccess = true;
-        state.categoryName = action.payload.name;
-      })
-      .addCase(getAProductCategory.rejected, (state, action) => {
+      .addCase(getCompanyById.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;
@@ -149,4 +152,4 @@ export const pCategorySlice = createSlice({
       .addCase(resetState, () => initialState);
   },
 });
-export default pCategorySlice.reducer;
+export default companySlice.reducer;

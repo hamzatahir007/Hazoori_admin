@@ -21,7 +21,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router basename="/Hazoori_admin">
       <Routes>
         {!user ?
           <>
