@@ -7,34 +7,39 @@ import { deleteAProduct, getProducts } from "../features/product/productSlice";
 import { Link } from "react-router-dom";
 import CustomModal from "../components/CustomModal";
 import { toast } from "react-toastify";
+import { deleteCompany, getCompanies } from "../features/company/companySlice";
+import { useAuth } from "../constans/store/auth";
+
 const columns = [
   {
     title: "SNo",
     dataIndex: "key",
   },
   {
-    title: "Title",
-    dataIndex: "title",
-    sorter: (a, b) => a.title.length - b.title.length,
+    title: "Name",
+    dataIndex: "name",
+    sorter: (a, b) => a.name.length - b.name.length,
   },
   {
-    title: "Bid-Type",
-    dataIndex: "brand",
-    sorter: (a, b) => a.brand.length - b.brand.length,
+    title: "Description",
+    dataIndex: "description",
   },
   {
-    title: "Category",
-    dataIndex: "category",
-    sorter: (a, b) => a.category.length - b.category.length,
+    title: "Email",
+    dataIndex: "email",
   },
   {
-    title: "Qty",
-    dataIndex: "color",
+    title: "Address",
+    dataIndex: "address",
   },
   {
-    title: "Price",
-    dataIndex: "price",
-    sorter: (a, b) => a.price - b.price,
+    title: "Radius",
+    dataIndex: "radius",
+    sorter: (a, b) => a.radius - b.radius,
+  },
+  {
+    title: "Status",
+    dataIndex: "status",
   },
   {
     title: "Action",
@@ -45,9 +50,10 @@ const columns = [
 const Companylist = () => {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
-  const [pId, setPId] = useState("");
+  const [cId, setCId] = useState("");
   const newProduct = useSelector((state) => state.product);
   const { isSuccess, isError, isLoading, deletedProduct } = newProduct;
+  const { user } = useAuth();
 
 
   useEffect(() => {
@@ -64,32 +70,36 @@ const Companylist = () => {
   };
   const showModal = (e) => {
     setOpen(true);
-    setPId(e);
+    setCId(e);
   };
   useEffect(() => {
-    dispatch(getProducts());
+    dispatch(getCompanies(user));
   }, []);
 
-  const productState = useSelector((state) => state.product.products);
+  const companyState = useSelector((state) => state.company.company);
+
+
+
   const data1 = [];
-  for (let i = 0; i < productState.length; i++) {
+  for (let i = 0; i < companyState.length; i++) {
     data1.push({
       key: i + 1,
-      title: productState[i].title,
-      brand: productState[i].bidtype,
-      category: productState[i].category,
-      color: productState[i].quantity,
-      price: `${productState[i].price}`,
+      name: companyState[i].name,
+      description: companyState[i].description,
+      email: companyState[i].email,
+      address: companyState[i].address,
+      radius: `${companyState[i].radius}`,
+      status: `${companyState[i].status}`,
       action: (
         <>
-          <Link 
-            to={`/admin/product/${productState[i]._id}`}
+          <Link
+            to={`/company/${companyState[i]._id}`}
             className=" fs-3 text-danger">
             <BiEdit />
           </Link>
           <button
             className="ms-3 fs-3 text-danger bg-transparent border-0"
-            onClick={() => showModal(productState[i]._id)}
+            onClick={() => showModal(companyState[i]._id)}
           >
             <AiFillDelete />
           </button>
@@ -100,13 +110,17 @@ const Companylist = () => {
 
 
   const deleteProduct = (e) => {
-    dispatch(deleteAProduct(e));
+    dispatch(deleteCompany(e))
+      .unwrap()              // <--- Makes .then work properly
+      .then(() => {
+        dispatch(getCompanies(user));   // fresh data
+      })
+      .catch((err) => {
+        console.log("Delete error:", err);
+      });
     setOpen(false);
-    setTimeout(() => {
-      dispatch(getProducts());
-    }, 100);
   };
-  
+
   return (
     <div>
       <h3 className="mb-4 title">Products</h3>
@@ -118,9 +132,9 @@ const Companylist = () => {
         hideModal={hideModal}
         open={open}
         performAction={() => {
-          deleteProduct(pId);
+          deleteProduct(cId);
         }}
-        title="Are you sure you want to delete this Product?"
+        title="Are you sure you want to delete this Company?"
       />
     </div>
   );

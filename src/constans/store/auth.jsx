@@ -22,8 +22,6 @@ export const AuthProvider = ({ children }) => {
         return localStorage.removeItem("token");
     }
 
-    
-
 
     // JWT authentication and get current login userdata
     const userAuthentication = async () => {

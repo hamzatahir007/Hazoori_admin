@@ -13,24 +13,13 @@ import MapModal from "../components/MapModal";
 import { WEB_Color } from "../constans/Colors";
 
 
-let schema = yup.object().shape({
-  name: yup.string().required("Company Name is Required"),
-  email: yup.string().required("Email is Required"),
-  password: yup.string().required("Password is Required"),
-  address: yup.string().required("Address is Required"),
-  officeLocation: yup.string().required("Location is Required"),
-  radius: yup.string().required("Radius is Required"),
-  status: yup.string().required("Status is Required"),
-  image: yup.mixed().nullable(),
-});
-
 const AddCompany = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [mapVisible, setMapVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const location = useLocation();
-  const getPCatId = location.pathname.split("/")[3];
+  const getPCatId = location.pathname.split("/")[2];
   const navigate = useNavigate();
   const newCategory = useSelector((state) => state.company);
   const {
@@ -43,14 +32,33 @@ const AddCompany = () => {
   } = newCategory;
   // console.log(newCategory);
 
+  let schema = yup.object().shape({
+    name: yup.string().required("Company Name is Required"),
+    description: yup.string().required("Company description is Required"),
+    email: yup.string().required("Email is Required"),
+    password: getPCatId ? yup.string().min(8, "Minimum 8 characters").nullable()
+      : yup.string().required("Password is Required"),
+    address: yup.string().required("Address is Required"),
+    officeLocation: yup.string().required("Location is Required"),
+    radius: yup.string().required("Radius is Required"),
+    status: yup.string().required("Status is Required"),
+    image: yup.mixed().nullable(),
+  });
+
+
   useEffect(() => {
-    console.log(getPCatId);
-    //   return
     if (getPCatId !== undefined) {
       dispatch(getCompanyById(getPCatId))
         .then((data) => {
-          // console.log(data.payload,'====');
+
           formik.setFieldValue('name', data.payload.name); // Set the selected image to the form field
+          formik.setFieldValue('description', data.payload.description); // Set the selected image to the form field
+          formik.setFieldValue('email', data.payload.email); // Set the selected image to the form field
+          // formik.setFieldValue('password', data.payload.password); // Set the selected image to the form field
+          formik.setFieldValue('address', data.payload.address); // Set the selected image to the form field
+          formik.setFieldValue('officeLocation', `${data.payload.officeLocation?.lat}, ${data.payload.officeLocation?.lng}`); // Set the selected image to the form field
+          formik.setFieldValue('radius', data.payload.radius); // Set the selected image to the form field
+          formik.setFieldValue('status', data.payload.status); // Set the selected image to the form field
           formik.setFieldValue('image', base_imageurl + data.payload.image); // Set the selected image to the form field
 
         })
@@ -77,6 +85,7 @@ const AddCompany = () => {
     // enableReinitialize: true,
     initialValues: {
       name: "",
+      description: "",
       email: "",
       password: "",
       address: "",
@@ -88,117 +97,73 @@ const AddCompany = () => {
     validationSchema: schema,
 
     onSubmit: async (values) => {
+      try {
+        // setLoading(true);
 
-      const [lat, lng] = values.officeLocation.split(",").map(Number);
-      values.officeLocation = { lat, lng };
-      // console.log(values , getPCatId);
-      // return
-      if (getPCatId !== undefined) {
-        const data = { id: getPCatId, pCatData: values };
-
-        let CheckImageStatus = /^http:\/\//.test(values?.image) && typeof values?.image === 'string' ? true : false;
-        // console.log(data, CheckImageStatus);
-        // return
-        if (!CheckImageStatus) {
-          let formimage = new FormData()
-          formimage.append('files', values?.image,);
-          axios.post(`${base_url}image`, formimage)
-            .then(async (response) => {
-              // console.log(response.status);
-              if (response.status === 200) {
-                let updateValue = {
-                  ...data,
-                  pCatData: {
-                    ...data.pCatData,
-                    image: `images/${response.data.data.filename}`
-                  }
-                };
-                // console.log(updateValue, 'success');
-                // return
-                dispatch(updateCompany(updateValue));
-                dispatch(resetState());
-              }
-            })
-            .catch((err) => {
-              alert("Server Error:", err)
-            })
-          return
-        }
-        else {
-          const imageName = values.image.match(/\/images\/(.*)$/)[1];
-          let updateValue = {
-            ...data,
-            pCatData: {
-              ...data.pCatData,
-              image: `images/${imageName}`
-            }
-          };
-          dispatch(updateCompany(updateValue));
-          dispatch(resetState());
-        }
-      } else {
-
-        if (values.image) {
-
-          let formimage = new FormData()
-          formimage.append('files', values.image,);
-
-          axios.post(`${base_url}image`, formimage)
-            .then(async (data) => {
-              if (data.status == 200) {
-                let updateValue = {
-                  ...values,
-                  image: `images/${data.data.data.filename}`
-                }
-                dispatch(createCompany(updateValue))
-                  .then((response) => {
-                    if (response?.payload?.response?.status == 400) {
-                      alert(response.payload.response.data.message);
-                      setLoading(false)
-                      return
-                    }
-                    alert(response?.payload?.msg)
-                    formik.resetForm();
-                    setTimeout(() => {
-                      dispatch(resetState());
-                    }, 300);
-                  })
-                  .catch((error) => {
-                    alert("Error creating category:", error)
-                    console.error("Error creating category:", error);
-                  });
-              }
-              // if(data?.status == true)
-            })
-            .catch((err) => {
-              alert("Server Error:", err)
-            })
-          return
-        }
-        else {
-          dispatch(createCompany(values))
-            .then((response) => {
-              // console.log(response);
-              
-              if (response?.payload?.status) {
-                alert(response.payload.message);
-                setLoading(false)
-                formik.resetForm();
-                setTimeout(() => {
-                  dispatch(resetState());
-                }, 300);
-                return
-              }
-              else{
-                alert(response?.payload)
-              }
-            })
-            .catch((error) => {
-              alert("Error creating category:", error)
-              console.error("Error creating category:", error);
-            });
+        // Convert officeLocation string to object {lat, lng}
+        if (typeof values.officeLocation === "string") {
+          const [lat, lng] = values.officeLocation.split(",").map(Number);
+          values.officeLocation = { lat, lng };
         }
 
+        const isUpdate = !!getPCatId;
+        const formData = { ...values };
+        // 🔹 Handle image upload if new image provided (not URL)
+        const isNewImage =
+          values.image && typeof values.image !== "string" && !/^http/.test(values.image);
+
+
+        if (isNewImage) {
+          const imageForm = new FormData();
+          imageForm.append("files", values.image);
+
+          const imageRes = await axios.post(`${base_url}image`, imageForm);
+          if (imageRes.status === 200) {
+            formData.image = `images/${imageRes.data.data.filename}`;
+          }
+        } else if (typeof values.image === "string" && values.image.includes("/images/")) {
+          // Extract image path if already exists
+          const imageName = values.image.match(/\/images\/(.*)$/)?.[1];
+          formData.image = `images/${imageName}`;
+        }
+
+        if (isUpdate) {
+          // 🔹 UPDATE existing company
+          if (!values.password) {
+            delete formData.password; // do not send password
+          }
+          const updatePayload = { id: getPCatId, pCatData: formData };
+          // console.log(updatePayload);
+          // return;
+          const updateRes = await dispatch(updateCompany(updatePayload));
+          if (updateRes?.payload?.status) {
+            alert(updateRes.payload.message);
+            // ✅ Common reset actions
+            formik.resetForm();
+            dispatch(resetState());
+          } else {
+            alert(updateRes?.payload || "Unexpected response from server.");
+          }
+        } else {
+          // 🔹 CREATE new company
+          const createRes = await dispatch(createCompany(formData));
+
+          if (createRes?.payload?.status) {
+            alert(createRes.payload.message);
+            // ✅ Common reset actions
+            formik.resetForm();
+            dispatch(resetState());
+          } else {
+            alert(createRes?.payload || "Unexpected response from server.");
+          }
+        }
+
+
+      } catch (error) {
+        console.error("Error in form submission:", error);
+        alert("An error occurred. Please try again later.");
+      } finally {
+        setLoading(false);
       }
     },
   });
@@ -234,6 +199,23 @@ const AddCompany = () => {
             />
             <div className="error">
               {formik.touched.name && formik.errors.name}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label>Description</label>
+            <textarea
+              className="form-control"
+              placeholder="Enter Company description"
+              id="description"
+              name="description"
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values.description}
+              rows={4} // adjust height
+            />
+            <div className="error">
+              {formik.touched.description && formik.errors.description}
             </div>
           </div>
 
@@ -378,8 +360,6 @@ const AddCompany = () => {
                               />
                             </>
                           ) : (
-                            // console.log(formik),
-
                             // If image is from local storage
                             <>
                               <h3 style={{ fontSize: 18 }}>Selected Image: {formik?.values?.image?.name}</h3>
@@ -415,7 +395,7 @@ const AddCompany = () => {
             className="btn btn-success border-0 rounded-3 my-5"
             type="submit"
           >
-            {getPCatId !== undefined ? "Edit" : "Add"} Category
+            {getPCatId !== undefined ? "Edit" : "Add"} Company
           </button>
         </form>
       </div>

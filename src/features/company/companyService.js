@@ -2,43 +2,40 @@ import axios from "axios";
 import { base_url } from "../../utils/baseUrl";
 import { config } from "../../utils/axiosconfig";
 
-const getCompany = async () => {
-  const response = await axios.get(`${base_url}company/`);
-  // console.log(response.data);
-  return response.data;
+const getCompanies = async (user) => {
+  const response = await axios.get(`${base_url}auth/allcompanies/`);
+  const filterdata = response.data.length > 0 && response.data.filter(res => res._id !== user?._id)
+  return filterdata;
 };
 const createCompany = async (category) => {
-  // console.log(category, 'POST' , `${base_url}auth/companyregister/`);
-  // return
   const response = await axios.post(`${base_url}auth/companyregister`, category, config);
 
   return response.data;
 };
 
 const getCompanyById = async (id) => {
-  const response = await axios.get(`${base_url}company/${id}`, config);
+  const response = await axios.get(`${base_url}auth/company/${id}`, config);
   // console.log(response.data , 'helllo');
   return response.data;
 };
 
 const deleteCompanyById = async (id) => {
-  const response = await axios.delete(`${base_url}company/${id}`, config);
+  // console.log(id);
 
+  const response = await axios.delete(`${base_url}auth/company/${id}`, config);
   return response.data;
 };
+
 const updateCompany = async (category) => {
-  // console.log(category,'test');
-  // return
   const response = await axios.put(
-    `${base_url}company/${category.id}`,
-    { name: category.pCatData.name, image: category.pCatData.image },
+    `${base_url}auth/updatecompany/${category.id}`,
+    category.pCatData,
     config
   );
-
   return response.data;
 };
 const companyService = {
-  getCompany,
+  getCompanies,
   createCompany,
   getCompanyById,
   deleteCompanyById,

@@ -30,6 +30,7 @@ import { useAuth } from "../constans/store/auth";
 import { WEB_Color } from "../constans/Colors";
 import { MdAccessTime, MdOutlineWbSunny, MdSunny } from "react-icons/md";
 import { GoBell } from "react-icons/go";
+import { base_imageurl, base_url } from "../utils/baseUrl";
 const { Header, Sider, Content } = Layout;
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -42,8 +43,6 @@ const MainLayout = () => {
   const { user, LogOutUser } = useAuth();
   // const { LogOutUser } = useAuth();
   const location = useLocation();
-
-  // console.log(user);
 
   const OnLogout = async () => {
     // navigate('/')
@@ -91,6 +90,7 @@ const MainLayout = () => {
           defaultSelectedKeys={[""]}
           onClick={({ key }) => {
             if (key == "signout") {
+              navigate('./login');
             } else {
               navigate(key);
             }
@@ -235,7 +235,7 @@ const MainLayout = () => {
               icon: <AiOutlineSetting className="fs-4" />,
               label: "Settings",
             },
-          ]}
+          ].filter(res => !user?.isAdmin ? res.key != 'companies' : res.key)}
         />
       </Sider>
       <Layout className="site-layout">
@@ -281,9 +281,13 @@ const MainLayout = () => {
                   data-bs-toggle="dropdown"
                   aria-expanded="false">
                   <img
+                    src={
+                      typeof user?.image === 'string' && user?.image
+                        ? `${base_imageurl}${user?.image}` // Use the URL if it's already uploaded
+                        : "https://stroyka-admin.html.themeforest.scompiler.ru/variants/ltr/images/customers/customer-4-64x64.jpg"
+                    }
                     width={35}
                     height={35}
-                    src="https://stroyka-admin.html.themeforest.scompiler.ru/variants/ltr/images/customers/customer-4-64x64.jpg"
                     alt=""
                     style={{
                       borderRadius: 50,

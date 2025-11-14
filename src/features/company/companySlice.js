@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk, createAction } from "@reduxjs/toolkit";
 import companyService from "./companyService";
 
-export const getCompany = createAsyncThunk(
+export const getCompanies = createAsyncThunk(
   "company/get-companies",
-  async (thunkAPI) => {
+  async (user, thunkAPI) => {
     try {
-      return await companyService.getCompany();
+      return await companyService.getCompanies(user);
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
     }
@@ -73,16 +73,16 @@ export const companySlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(getCompany.pending, (state) => {
+      .addCase(getCompanies.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(getCompany.fulfilled, (state, action) => {
+      .addCase(getCompanies.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isError = false;
         state.isSuccess = true;
         state.company = action.payload;
       })
-      .addCase(getCompany.rejected, (state, action) => {
+      .addCase(getCompanies.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.isSuccess = false;
