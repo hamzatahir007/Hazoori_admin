@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard.jsx';
 import AddCompany from './pages/AddCompany.jsx';
 import Companylist from './pages/CompanyList.jsx';
 import PrivateRoute from "./components/PrivateRoute";
+import AddDepartment from './pages/AddDepartment.jsx';
+import Departmentlist from './pages/Departmentlist.jsx';
 
 function App() {
   const { user, LogOutUser } = useAuth();
@@ -30,9 +32,15 @@ function App() {
 
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
+
             <Route path="list-company" element={<Companylist />} />
             <Route path="company" element={<AddCompany />} />
             <Route path="company/:id" element={<AddCompany />} />
+
+            <Route path="list-department" element={<Departmentlist />} />
+            <Route path="department" element={<AddDepartment />} />
+            <Route path="department/:id" element={<AddDepartment />} />
+
           </Route>
         }
 

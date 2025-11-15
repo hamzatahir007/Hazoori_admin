@@ -9,6 +9,7 @@ import CustomModal from "../components/CustomModal";
 import { toast } from "react-toastify";
 import { deleteCompany, getCompanies } from "../features/company/companySlice";
 import { useAuth } from "../constans/store/auth";
+import { deleteDepartment, getAllDepartment, getDepartmentById } from "../features/department/departmentSlice";
 
 const columns = [
   {
@@ -25,21 +26,8 @@ const columns = [
     dataIndex: "description",
   },
   {
-    title: "Email",
-    dataIndex: "email",
-  },
-  {
-    title: "Address",
-    dataIndex: "address",
-  },
-  {
-    title: "Radius",
-    dataIndex: "radius",
-    sorter: (a, b) => a.radius - b.radius,
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
+    title: "Company",
+    dataIndex: "companyId",
   },
   {
     title: "Action",
@@ -47,18 +35,23 @@ const columns = [
   },
 ];
 
-const Companylist = () => {
+const Departmentlist = () => {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const [cId, setCId] = useState("");
-  const newProduct = useSelector((state) => state.product);
-  const { isSuccess, isError, isLoading, deletedProduct } = newProduct;
+  const departmentState = useSelector((state) => state.department.department);
+  const deletedDepartmentState = useSelector((state) => state.department);
+  const companyState = useSelector((state) => state.company.company);
+
+  // const { isSuccess, isError, isLoading } = departmentState;
+  const { isSuccess, isError, isLoading, deletedDepartment } = deletedDepartmentState;
+
+
   const { user } = useAuth();
 
-
   useEffect(() => {
-    if (isSuccess && deletedProduct) {
-      toast.success("Company Deleted Successfullly!");
+    if (isSuccess && deletedDepartment) {
+      toast.success("Department Deleted Successfullly!");
     }
     if (isError) {
       toast.error("Something Went Wrong!");
@@ -73,33 +66,39 @@ const Companylist = () => {
     setCId(e);
   };
   useEffect(() => {
-    dispatch(getCompanies(user));
+
+    GetDepartment();
+    dispatch(getCompanies());
+
   }, []);
 
-  const companyState = useSelector((state) => state.company.company);
-
+  const GetDepartment = () => {
+    if (user.isAdmin) {
+      dispatch(getAllDepartment());
+    }
+    else {
+      dispatch(getDepartmentById(user._id));
+    }
+  }
 
 
   const data1 = [];
-  for (let i = 0; i < companyState.length; i++) {
+  for (let i = 0; i < departmentState.length; i++) {
     data1.push({
       key: i + 1,
-      name: companyState[i].name,
-      description: companyState[i].description,
-      email: companyState[i].email,
-      address: companyState[i].address,
-      radius: `${companyState[i].radius}`,
-      status: `${companyState[i].status}`,
+      name: departmentState[i].name,
+      description: departmentState[i].description,
+      companyId: companyState?.length > 0 ? companyState?.find(res => res._id === departmentState[i].companyId).name : departmentState[i].companyId,
       action: (
         <>
           <Link
-            to={`/company/${companyState[i]._id}`}
+            to={`/department/${departmentState[i]._id}`}
             className=" fs-3 text-danger">
             <BiEdit />
           </Link>
           <button
             className="ms-3 fs-3 text-danger bg-transparent border-0"
-            onClick={() => showModal(companyState[i]._id)}
+            onClick={() => showModal(departmentState[i]._id)}
           >
             <AiFillDelete />
           </button>
@@ -110,10 +109,10 @@ const Companylist = () => {
 
 
   const deleteProduct = (e) => {
-    dispatch(deleteCompany(e))
-      .unwrap()              // <--- Makes .then work properly
+    dispatch(deleteDepartment(e))
+      .unwrap()
       .then(() => {
-        dispatch(getCompanies(user));   // fresh data
+        GetDepartment();
       })
       .catch((err) => {
         console.log("Delete error:", err);
@@ -123,7 +122,7 @@ const Companylist = () => {
 
   return (
     <div>
-      <h3 className="mb-4 title">Products</h3>
+      <h3 className="mb-4 title">Departments</h3>
       <div>
         <Table columns={columns} dataSource={data1} />
       </div>
@@ -134,10 +133,10 @@ const Companylist = () => {
         performAction={() => {
           deleteProduct(cId);
         }}
-        title="Are you sure you want to delete this Company?"
+        title="Are you sure you want to delete this Department?"
       />
     </div>
   );
 };
 
-export default Companylist;
+export default Departmentlist;

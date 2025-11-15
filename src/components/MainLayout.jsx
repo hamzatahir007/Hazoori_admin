@@ -163,7 +163,7 @@ const MainLayout = () => {
               label: "Departments",
               children: [
                 {
-                  key: "add-department",
+                  key: "department",
                   icon: <BiCategoryAlt className="fs-4" />,
                   label: "Add Department",
                 },
