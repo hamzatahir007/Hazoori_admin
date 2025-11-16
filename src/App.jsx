@@ -12,10 +12,13 @@ import Companylist from './pages/CompanyList.jsx';
 import PrivateRoute from "./components/PrivateRoute";
 import AddDepartment from './pages/AddDepartment.jsx';
 import Departmentlist from './pages/Departmentlist.jsx';
+import Designationlist from './pages/Designationlist.jsx';
+import AddDesignation from './pages/AddDesignation.jsx';
+import Shiftlist from './pages/Shiftlist.jsx';
+import AddShift from './pages/AddShift.jsx';
 
 function App() {
   const { user, LogOutUser } = useAuth();
-  console.log(user , 'pp');
 
 
   return (
@@ -32,19 +35,24 @@ function App() {
 
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
-
             <Route path="list-company" element={<Companylist />} />
             <Route path="company" element={<AddCompany />} />
             <Route path="company/:id" element={<AddCompany />} />
-
             <Route path="list-department" element={<Departmentlist />} />
             <Route path="department" element={<AddDepartment />} />
             <Route path="department/:id" element={<AddDepartment />} />
+            <Route path="list-designation" element={<Designationlist />} />
+            <Route path="designation" element={<AddDesignation />} />
+            <Route path="designation/:id" element={<AddDesignation />} />
+            <Route path="list-shift" element={<Shiftlist />} />
+            <Route path="shift" element={<AddShift />} />
+            <Route path="shift/:id" element={<AddShift />} />
+            <Route path="*" element={<Navigate to="/" />} />
 
           </Route>
         }
 
-        <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
+        {/* <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} /> */}
       </Routes>
     </Router >
   )

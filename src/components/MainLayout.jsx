@@ -180,7 +180,7 @@ const MainLayout = () => {
               label: "Designations",
               children: [
                 {
-                  key: "add-designation",
+                  key: "designation",
                   icon: <BiCategoryAlt className="fs-4" />,
                   label: "Add Designation",
                 },
@@ -197,7 +197,7 @@ const MainLayout = () => {
               label: "Shifts",
               children: [
                 {
-                  key: "add-shift",
+                  key: "shift",
                   icon: <MdAccessTime className="fs-4" />,
                   label: "Add Shift",
                 },
