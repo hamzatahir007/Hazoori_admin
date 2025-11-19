@@ -22,12 +22,16 @@ const columns = [
     sorter: (a, b) => a.name.length - b.name.length,
   },
   {
-    title: "Description",
-    dataIndex: "description",
+    title: "Duration",
+    dataIndex: "duration",
   },
   {
-    title: "Company",
-    dataIndex: "companyId",
+    title: "Start",
+    dataIndex: "startTime",
+  },
+  {
+    title: "End",
+    dataIndex: "endTime",
   },
   {
     title: "Action",
@@ -51,7 +55,7 @@ const Shiftlist = () => {
 
   useEffect(() => {
     if (isSuccess && deletedDesignation) {
-      toast.success("Designation Deleted Successfullly!");
+      toast.success("Shift Deleted Successfullly!");
     }
     if (isError) {
       toast.error("Something Went Wrong!");
@@ -92,7 +96,7 @@ const Shiftlist = () => {
       action: (
         <>
           <Link
-            to={`/department/${designationState[i]._id}`}
+            to={`/shift/${designationState[i]._id}`}
             className=" fs-3 text-danger">
             <BiEdit />
           </Link>
@@ -122,7 +126,7 @@ const Shiftlist = () => {
 
   return (
     <div>
-      <h3 className="mb-4 title">Designations</h3>
+      <h3 className="mb-4 title">Shifts</h3>
       <div>
         <Table columns={columns} dataSource={data1} />
       </div>
@@ -133,7 +137,7 @@ const Shiftlist = () => {
         performAction={() => {
           deleteProduct(cId);
         }}
-        title="Are you sure you want to delete this Designation?"
+        title="Are you sure you want to delete this Shift?"
       />
     </div>
   );

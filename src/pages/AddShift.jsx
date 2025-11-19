@@ -48,13 +48,30 @@ const AddShift = () => {
   }, [user]);
 
   let schema = yup.object().shape({
-    name: yup.string().required("Designation Name is required"),
-    description: yup.string().required("Description  is Required"),
+    name: yup.string().required("Shift Name is required"),
+    duration: yup.string().required("duration  is Required"),
     companyId: yup
       .string()
       .required("Company is required")
       .min(5, "Invalid company"),
+    startTime: yup.string().required("startTime  is Required"),
+    endTime: yup.string().required("endTime  is Required"),
   });
+
+  const calculateEndTime = (start, hours) => {
+    if (!start || !hours) return "";
+
+    // start must be in YYYY-MM-DD or valid ISO format
+    const date = new Date(start);
+
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid Date Value:", start);
+      return "";
+    }
+
+    date.setHours(date.getHours() + Number(hours));
+    return date.toISOString();
+  };
 
 
   useEffect(() => {
@@ -65,8 +82,10 @@ const AddShift = () => {
 
           formik.setValues({
             name: data.payload.name,
-            description: data.payload.description,
+            duration: data.payload.duration,
             companyId: data.payload.companyId,
+            compstartTimeanyId: data.payload.companyId,
+            endTime: data.payload.companyId,
           });
 
         })
@@ -77,11 +96,11 @@ const AddShift = () => {
 
   useEffect(() => {
     if (isSuccess && createdDesignation) {
-      toast.success("Designation Added Successfullly!");
+      toast.success("Shift Added Successfullly!");
     }
     if (isSuccess && updatedDesignation) {
-      toast.success("Designation Updated Successfullly!");
-      navigate("/admin/list-designation");
+      toast.success("Shift Updated Successfullly!");
+      navigate("/admin/list-shift");
     }
     if (isError) {
       toast.error("Something Went Wrong!");
@@ -93,12 +112,22 @@ const AddShift = () => {
     // enableReinitialize: true,
     initialValues: {
       name: "",
-      description: "",
+      duration: "",
       companyId: "",
+      startTime: "",
+      endTime: "",
     },
     validationSchema: schema,
 
     onSubmit: async (values) => {
+
+      const finalData = {
+        ...values,
+        startTime: new Date(values.startTime).toISOString(),
+        endTime: new Date(values.endTime).toISOString(),
+      };
+      console.log(finalData);
+      return
       try {
         // setLoading(true);
         if (editId) {
@@ -138,12 +167,46 @@ const AddShift = () => {
     },
   });
 
+  useEffect(() => {
+    const { startTime, duration } = formik.values;
+
+    if (startTime && duration) {
+      const end = calculateEndTime(startTime, duration);
+      if (end) {
+        formik.setFieldValue("endTime", end);
+      }
+    }
+  }, [formik.values.startTime, formik.values.duration]);
+
+
+  const DurationState = [
+    {
+      id: 1,
+      name: '2hr',
+      value: 2,
+    },
+    {
+      id: 2,
+      name: '9hr',
+      value: 9,
+    },
+    {
+      id: 3,
+      name: '12hr',
+      value: 12,
+    },
+    {
+      id: 4,
+      name: '24hr',
+      value: 24,
+    },
+  ]
 
 
   return (
     <div>
       <h3 className="mb-4  title">
-        {editId !== undefined ? "Edit" : "Add"} Designation
+        {editId !== undefined ? "Edit" : "Add"} Shift
       </h3>
       <div>
         <form action="" onSubmit={formik.handleSubmit}>
@@ -151,7 +214,7 @@ const AddShift = () => {
             <label>Name</label>
             <CustomInput
               type="text"
-              label="Enter designation title"
+              label="Enter shift title"
               onChng={formik.handleChange("name")}
               onBlr={formik.handleBlur("name")}
               val={formik.values.name}
@@ -163,21 +226,56 @@ const AddShift = () => {
           </div>
 
           <div className="mb-4">
-            <label>Description</label>
-            <textarea
-              className="form-control"
-              placeholder="Enter designation description"
-              id="description"
-              name="description"
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.description}
-              rows={4} // adjust height
-            />
+            <label>Duration</label>
+            <select
+              className="form-select"
+              value={formik.values.duration}
+              onChange={(e) => formik.setFieldValue("duration", e.target.value)}
+            >
+              <option value="">Select Duration</option>
+              {DurationState.map(res => {
+                return (
+                  <option key={res._id} value={res?._id}>{res?.name}</option>
+                )
+              })}
+            </select>
             <div className="error">
-              {formik.touched.description && formik.errors.description}
+              {formik.touched.duration && formik.errors.duration}
             </div>
           </div>
+
+          <div className="mb-4">
+            <label>Start Time</label>
+            <CustomInput
+              type="datetime-local"
+              label="Select start time"
+              onChng={formik.handleChange("startTime")}
+              onBlr={formik.handleBlur("startTime")}
+              val={formik.values.startTime}
+              id="brand"
+            />
+            <div className="error">
+              {formik.touched.startTime && formik.errors.startTime}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label>End Time</label>
+            <CustomInput
+              type="datetime-local"
+              label="End time (auto calculated)"
+              onChng={formik.handleChange("endTime")}
+              onBlr={formik.handleBlur("endTime")}
+              val={formik.values.endTime}
+              id="brand"
+              disabled={true}
+            />
+            <div className="error">
+              {formik.touched.endTime && formik.errors.endTime}
+            </div>
+          </div>
+
+
           {user?.isAdmin && companyState?.length > 0 &&
             <div className="mb-4">
               <label>Company</label>
