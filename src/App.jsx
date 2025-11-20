@@ -16,6 +16,8 @@ import Designationlist from './pages/Designationlist.jsx';
 import AddDesignation from './pages/AddDesignation.jsx';
 import Shiftlist from './pages/Shiftlist.jsx';
 import AddShift from './pages/AddShift.jsx';
+import Employeelist from './pages/Employeelist.jsx';
+import AddEmployee from './pages/AddEmployee.jsx';
 
 function App() {
   const { user, LogOutUser } = useAuth();
@@ -47,6 +49,9 @@ function App() {
             <Route path="list-shift" element={<Shiftlist />} />
             <Route path="shift" element={<AddShift />} />
             <Route path="shift/:id" element={<AddShift />} />
+            <Route path="list-employee" element={<Employeelist />} />
+            <Route path="employee" element={<AddEmployee />} />
+            <Route path="employee/:id" element={<AddEmployee />} />
             <Route path="*" element={<Navigate to="/" />} />
 
           </Route>

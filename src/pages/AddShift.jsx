@@ -13,6 +13,7 @@ import MapModal from "../components/MapModal";
 import { WEB_Color } from "../constans/Colors";
 import { useAuth } from "../constans/store/auth";
 import { createNewDesignation, getDesignation, updateDesignation, resetState } from "../features/designation/designationSlice";
+import { createNewShift, getShiftById, getShiftsByCompany, updateShift } from "../features/shift/shiftsSlice";
 
 
 const AddShift = () => {
@@ -28,14 +29,16 @@ const AddShift = () => {
   const [mapVisible, setMapVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const companyState = useSelector((state) => state.company.company);
-  const designationState = useSelector((state) => state.designation);
+  // const designationState = useSelector((state) => state.designation);
+    const shiftState = useSelector((state) => state.shift);
+  
   const {
     isSuccess,
     isError,
     isLoading,
-    createdDesignation,
-    updatedDesignation,
-  } = designationState;
+    createdShift,
+    updatedShift,
+  } = shiftState;
 
 
 
@@ -58,34 +61,36 @@ const AddShift = () => {
     endTime: yup.string().required("endTime  is Required"),
   });
 
-  const calculateEndTime = (start, hours) => {
-    if (!start || !hours) return "";
+  const calculateEndTime = (startTime, hours) => {
+    if (!startTime || !hours) return "";
 
-    // start must be in YYYY-MM-DD or valid ISO format
-    const date = new Date(start);
+    // startTime = "09:00"
+    const [h, m] = startTime.split(":").map(Number);
 
-    if (isNaN(date.getTime())) {
-      console.warn("Invalid Date Value:", start);
-      return "";
-    }
+    let totalMinutes = h * 60 + m + Number(hours) * 60;
 
-    date.setHours(date.getHours() + Number(hours));
-    return date.toISOString();
+    // wrap around 24 hours (optional)
+    totalMinutes = totalMinutes % (24 * 60);
+
+    const endH = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+    const endM = String(totalMinutes % 60).padStart(2, "0");
+
+    return `${endH}:${endM}`;
   };
 
 
   useEffect(() => {
     if (editId !== undefined) {
 
-      dispatch(getDesignation(editId))
+      dispatch(getShiftById(editId))
         .then((data) => {
 
           formik.setValues({
             name: data.payload.name,
             duration: data.payload.duration,
             companyId: data.payload.companyId,
-            compstartTimeanyId: data.payload.companyId,
-            endTime: data.payload.companyId,
+            startTime: data.payload.startTime,
+            endTime: data.payload.endTime,
           });
 
         })
@@ -95,10 +100,10 @@ const AddShift = () => {
   }, [editId]);
 
   useEffect(() => {
-    if (isSuccess && createdDesignation) {
+    if (isSuccess && createdShift) {
       toast.success("Shift Added Successfullly!");
     }
-    if (isSuccess && updatedDesignation) {
+    if (isSuccess && updatedShift) {
       toast.success("Shift Updated Successfullly!");
       navigate("/admin/list-shift");
     }
@@ -121,20 +126,13 @@ const AddShift = () => {
 
     onSubmit: async (values) => {
 
-      const finalData = {
-        ...values,
-        startTime: new Date(values.startTime).toISOString(),
-        endTime: new Date(values.endTime).toISOString(),
-      };
-      console.log(finalData);
-      return
-      try {
+     try {
         // setLoading(true);
         if (editId) {
           const updatePayload = { id: editId, data: values };
 
 
-          const updateRes = await dispatch(updateDesignation(updatePayload));
+          const updateRes = await dispatch(updateShift(updatePayload));
           if (updateRes?.payload?.status) {
             alert(updateRes.payload.message);
             // ✅ Common reset actions
@@ -145,7 +143,7 @@ const AddShift = () => {
           }
         } else {
 
-          const createRes = await dispatch(createNewDesignation(values));
+          const createRes = await dispatch(createNewShift(values));
 
           if (createRes?.payload?.status) {
             alert(createRes.payload.message);
@@ -235,7 +233,7 @@ const AddShift = () => {
               <option value="">Select Duration</option>
               {DurationState.map(res => {
                 return (
-                  <option key={res._id} value={res?._id}>{res?.name}</option>
+                  <option key={res._id} value={res?.value}>{res?.name}</option>
                 )
               })}
             </select>
@@ -247,7 +245,7 @@ const AddShift = () => {
           <div className="mb-4">
             <label>Start Time</label>
             <CustomInput
-              type="datetime-local"
+              type="time"
               label="Select start time"
               onChng={formik.handleChange("startTime")}
               onBlr={formik.handleBlur("startTime")}
@@ -262,7 +260,7 @@ const AddShift = () => {
           <div className="mb-4">
             <label>End Time</label>
             <CustomInput
-              type="datetime-local"
+              type="time"
               label="End time (auto calculated)"
               onChng={formik.handleChange("endTime")}
               onBlr={formik.handleBlur("endTime")}

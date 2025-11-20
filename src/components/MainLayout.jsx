@@ -124,7 +124,7 @@ const MainLayout = () => {
               label: "Employees",
               children: [
                 {
-                  key: "add-employee",
+                  key: "employee",
                   icon: <AiOutlineUserAdd className="fs-4" />,
                   label: "Add Employee",
                 },

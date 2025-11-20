@@ -9,8 +9,6 @@ import CustomModal from "../components/CustomModal";
 import { toast } from "react-toastify";
 import { deleteCompany, getCompanies } from "../features/company/companySlice";
 import { useAuth } from "../constans/store/auth";
-import { deleteDesignation, getAllDesignation, getDesignationById } from "../features/designation/designationSlice";
-import { deleteShiftById, getAllShifts, getShiftsByCompany } from "../features/shift/shiftsSlice";
 
 const columns = [
   {
@@ -23,21 +21,25 @@ const columns = [
     sorter: (a, b) => a.name.length - b.name.length,
   },
   {
-    title: "Company",
-    dataIndex: "company",
-    sorter: (a, b) => a.company.length - b.company.length,
+    title: "Description",
+    dataIndex: "description",
   },
   {
-    title: "Duration",
-    dataIndex: "duration",
+    title: "Email",
+    dataIndex: "email",
   },
   {
-    title: "Start",
-    dataIndex: "startTime",
+    title: "Address",
+    dataIndex: "address",
   },
   {
-    title: "End",
-    dataIndex: "endTime",
+    title: "Radius",
+    dataIndex: "radius",
+    sorter: (a, b) => a.radius - b.radius,
+  },
+  {
+    title: "Status",
+    dataIndex: "status",
   },
   {
     title: "Action",
@@ -45,22 +47,18 @@ const columns = [
   },
 ];
 
-const Shiftlist = () => {
+const Employeelist = () => {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch();
   const [cId, setCId] = useState("");
-  const shiftState = useSelector((state) => state.shift.shift);
-  const deletedShiftState = useSelector((state) => state.shift);
-  const companyState = useSelector((state) => state.company.company);
-
-  const { isSuccess, isError, isLoading, deletedShift } = deletedShiftState;
-
-
+  const newProduct = useSelector((state) => state.product);
+  const { isSuccess, isError, isLoading, deletedProduct } = newProduct;
   const { user } = useAuth();
 
+
   useEffect(() => {
-    if (isSuccess && deletedShift) {
-      toast.success("Shift Deleted Successfullly!");
+    if (isSuccess && deletedProduct) {
+      toast.success("Company Deleted Successfullly!");
     }
     if (isError) {
       toast.error("Something Went Wrong!");
@@ -75,41 +73,33 @@ const Shiftlist = () => {
     setCId(e);
   };
   useEffect(() => {
-
-    GetShifts();
-    dispatch(getCompanies());
-
+    dispatch(getCompanies(user));
   }, []);
 
-  const GetShifts = () => {
-    if (user.isAdmin) {
-      dispatch(getAllShifts());
-    }
-    else {
-      dispatch(getShiftsByCompany(user._id));
-    }
-  }
+  const companyState = useSelector((state) => state.company.company);
+
 
 
   const data1 = [];
-  for (let i = 0; i < shiftState.length; i++) {
+  for (let i = 0; i < companyState.length; i++) {
     data1.push({
       key: i + 1,
-      name: shiftState[i].name,
-      duration: `${shiftState[i].duration}hr`,
-      company: companyState?.length > 0 && companyState?.find(res => res._id === shiftState[i].companyId)?.name ? companyState?.find(res => res._id === shiftState[i].companyId)?.name : 'Unknow',
-      startTime: shiftState[i].startTime,
-      endTime: shiftState[i].endTime,
+      name: companyState[i].name,
+      description: companyState[i].description,
+      email: companyState[i].email,
+      address: companyState[i].address,
+      radius: `${companyState[i].radius}`,
+      status: `${companyState[i].status}`,
       action: (
         <>
           <Link
-            to={`/shift/${shiftState[i]._id}`}
+            to={`/company/${companyState[i]._id}`}
             className=" fs-3 text-danger">
             <BiEdit />
           </Link>
           <button
             className="ms-3 fs-3 text-danger bg-transparent border-0"
-            onClick={() => showModal(shiftState[i]._id)}
+            onClick={() => showModal(companyState[i]._id)}
           >
             <AiFillDelete />
           </button>
@@ -120,10 +110,10 @@ const Shiftlist = () => {
 
 
   const deleteProduct = (e) => {
-    dispatch(deleteShiftById(e))
-      .unwrap()
+    dispatch(deleteCompany(e))
+      .unwrap()              // <--- Makes .then work properly
       .then(() => {
-        GetShifts();
+        dispatch(getCompanies(user));   // fresh data
       })
       .catch((err) => {
         console.log("Delete error:", err);
@@ -133,7 +123,7 @@ const Shiftlist = () => {
 
   return (
     <div>
-      <h3 className="mb-4 title">Shifts</h3>
+      <h3 className="mb-4 title">Products</h3>
       <div>
         <Table columns={columns} dataSource={data1} />
       </div>
@@ -144,10 +134,10 @@ const Shiftlist = () => {
         performAction={() => {
           deleteProduct(cId);
         }}
-        title="Are you sure you want to delete this Shift?"
+        title="Are you sure you want to delete this Company?"
       />
     </div>
   );
 };
 
-export default Shiftlist;
+export default Employeelist;
