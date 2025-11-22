@@ -7,6 +7,7 @@ import companyReducer from "../features/company/companySlice";
 import departmentReducer from "../features/department/departmentSlice";
 import designationReducer from "../features/designation/designationSlice";
 import shiftReducer from "../features/shift/shiftsSlice";
+import employeeReducer from "../features/employee/employeeSlice";
 import blogReducer from "../features/blogs/blogSlice";
 import colorReducer from "../features/color/colorSlice";
 import enquiryReducer from "../features/enquiry/enquirySlice";
@@ -23,6 +24,7 @@ export const store = configureStore({
     department: departmentReducer,
     designation: designationReducer,
     shift: shiftReducer,
+    employee: employeeReducer,
     blogs: blogReducer,
     color: colorReducer,
     enquiry: enquiryReducer,

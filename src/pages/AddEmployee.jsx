@@ -8,13 +8,14 @@ import { useFormik } from "formik";
 import Dropzone from "react-dropzone";
 import { base_imageurl, base_url } from "../utils/baseUrl";
 import axios from "axios";
-import { createCompany, getCompanies, getCompanyById, resetState, updateCompany } from "../features/company/companySlice";
+import { createCompany, getCompanies, getCompanyById, updateCompany } from "../features/company/companySlice";
 import MapModal from "../components/MapModal";
 import { WEB_Color } from "../constans/Colors";
 import { useAuth } from "../constans/store/auth";
 import { getAllDepartment, getDepartmentById } from "../features/department/departmentSlice";
 import { getAllDesignation, getDesignationById } from "../features/designation/designationSlice";
 import { getAllShifts, getShiftsByCompany } from "../features/shift/shiftsSlice";
+import { createEmployee, getEmployeeById, resetState, updateEmployee } from "../features/employee/employeeSlice";
 
 
 const AddEmployee = () => {
@@ -55,14 +56,18 @@ const AddEmployee = () => {
     designationId: yup.string().required("Designation is Required"),
     departmentId: yup.string().required("Department is Required"),
     shiftId: yup.string().required("Shift is Required"),
-    password: yup.mixed().required("Password is Required"),
+    status: yup.string().required("Status is Required"),
+    password: getPCatId ? yup.string().min(8, "Minimum 8 characters").nullable()
+      : yup.string().required("Password is Required"),
   });
 
 
   useEffect(() => {
     if (getPCatId !== undefined) {
-      dispatch(getCompanyById(getPCatId))
+      dispatch(getEmployeeById(getPCatId))
         .then((data) => {
+          // console.log(data.payload);
+
           formik.setFieldValue('fullName', data.payload.fullName); // Set the selected image to the form field
           formik.setFieldValue('email', data.payload.email); // Set the selected image to the form field
           formik.setFieldValue('phone', data.payload.phone); // Set the selected image to the form field
@@ -71,9 +76,11 @@ const AddEmployee = () => {
           formik.setFieldValue('designationId', data.payload.designationId); // Set the selected image to the form field
           formik.setFieldValue('departmentId', data.payload.departmentId); // Set the selected image to the form field
           formik.setFieldValue('shiftId', data.payload.shiftId); // Set the selected image to the form field
-          formik.setFieldValue('password', data.payload.password); // Set the selected image to the form field
-          formik.setFieldValue('profileImage', base_imageurl + data.payload.image); // Set the selected image to the form field
-          formik.setFieldValue('faceImage', base_imageurl + data.payload.faceImage); // Set the selected image to the form field
+          formik.setFieldValue('status', data.payload.status); // Set the selected image to the form field
+          // formik.setFieldValue('password', data.payload.password); // Set the selected image to the form field
+          formik.setFieldValue('profileImage', data.payload.profileImage ? base_imageurl + data.payload.profileImage : ""); // Set the selected image to the form field
+          formik.setFieldValue('faceImage', data.payload.faceImage ? base_imageurl + data.payload.faceImage : null); // Set the selected image to the form field
+          formik.setFieldValue('faceVerified', data.payload.faceVerified); // Set the selected image to the form field
         })
     } else {
       dispatch(resetState());
@@ -97,49 +104,47 @@ const AddEmployee = () => {
   const formik = useFormik({
     // enableReinitialize: true,
     initialValues: {
-      fullName: '',
-      email: '',
-      phone: '',
-      companyId: '',
-      address: '',
-      designationId: '',
-      departmentId: '',
-      shiftId: '',
-      password: '',
+      companyId: "",
+      fullName: "",
+      address: "",
+      email: "",
+      phone: "",
+      departmentId: "",
+      roleId: null,
+      designationId: "",
+      shiftId: "",
+      status: "",
+      password: "",
+      faceVerified: "",
+      profileImage: "", // File or URL
+      faceImage: null, // File or URL
     },
     validationSchema: schema,
 
     onSubmit: async (values) => {
       try {
-        console.log(values);
-        return
         // setLoading(true);
-
-        // Convert officeLocation string to object {lat, lng}
-        if (typeof values.officeLocation === "string") {
-          const [lat, lng] = values.officeLocation.split(",").map(Number);
-          values.officeLocation = { lat, lng };
-        }
-
+        // Prepare data payload
         const isUpdate = !!getPCatId;
+
         const formData = { ...values };
-        // 🔹 Handle image upload if new image provided (not URL)
+
         const isNewImage =
-          values.image && typeof values.image !== "string" && !/^http/.test(values.image);
+          values.profileImage && typeof values.profileImage !== "string" && !/^http/.test(values.profileImage);
 
 
         if (isNewImage) {
           const imageForm = new FormData();
-          imageForm.append("files", values.image);
+          imageForm.append("files", values.profileImage);
 
           const imageRes = await axios.post(`${base_url}image`, imageForm);
           if (imageRes.status === 200) {
-            formData.image = `images/${imageRes.data.data.filename}`;
+            formData.profileImage = `images/${imageRes.data.data.filename}`;
           }
-        } else if (typeof values.image === "string" && values.image.includes("/images/")) {
+        } else if (typeof values.profileImage === "string" && values.profileImage.includes("/images/")) {
           // Extract image path if already exists
-          const imageName = values.image.match(/\/images\/(.*)$/)?.[1];
-          formData.image = `images/${imageName}`;
+          const imageName = values.profileImage.match(/\/images\/(.*)$/)?.[1];
+          formData.profileImage = `images/${imageName}`;
         }
 
         if (isUpdate) {
@@ -147,10 +152,23 @@ const AddEmployee = () => {
           if (!values.password) {
             delete formData.password; // do not send password
           }
+          if (!values.profileImage) {
+            formData.profileImage = ""; // do not send password
+          }
+          if (values?.faceImage) {
+            const faceimageName = values?.faceImage?.match(/\/images\/(.*)$/)?.[1];
+            formData.faceImage = `images/${faceimageName}`;
+          }
+          if (!values?.faceImage) {
+            formData.faceImage = null;
+            formData.faceVerified = false;
+          }
+          // console.log(isNewImage, formData, values);
+          // return
           const updatePayload = { id: getPCatId, pCatData: formData };
           // console.log(updatePayload);
           // return;
-          const updateRes = await dispatch(updateCompany(updatePayload));
+          const updateRes = await dispatch(updateEmployee(updatePayload));
           if (updateRes?.payload?.status) {
             alert(updateRes.payload.message);
             // ✅ Common reset actions
@@ -161,7 +179,7 @@ const AddEmployee = () => {
           }
         } else {
           // 🔹 CREATE new company
-          const createRes = await dispatch(createCompany(formData));
+          const createRes = await dispatch(createEmployee(formData));
 
           if (createRes?.payload?.status) {
             alert(createRes.payload.message);
@@ -184,14 +202,15 @@ const AddEmployee = () => {
   });
 
   const uploadImg = (props) => {
+    // formik.resetForm('profileImage', "");
+
+    // return
     const image = props[0];
-    // console.log(url);
+    // console.log(props[0]);
     // return
     setSelectedImage(image);
-
     // console.log(props);
-    formik.setFieldValue('image', image); // Set the selected image to the form field
-
+    formik.setFieldValue('profileImage', image); // Set the selected image to the form field
   }
 
 
@@ -215,6 +234,8 @@ const AddEmployee = () => {
 
     }
   }
+
+
 
   return (
     <div>
@@ -256,7 +277,7 @@ const AddEmployee = () => {
           <div className="mb-4">
             <label>Phone</label>
             <CustomInput
-              type="text"
+              type="phone"
               label="Enter Phone Number"
               onChng={formik.handleChange("phone")}
               onBlr={formik.handleBlur("phone")}
@@ -392,21 +413,76 @@ const AddEmployee = () => {
             </div>
           </div>
 
+          {getPCatId !== undefined && (
+            <div>
+              {/* Verification Badge */}
+              {formik.values.faceVerified && formik?.values.faceImage && (
+                <div style={{
+                  background: "#e6ffe6",
+                  border: "1px solid #28a745",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "15px"
+                }}>
+                  <span style={{ fontSize: 20, color: "#28a745" }}>✔</span>
+                  <span style={{ fontWeight: "bold", color: "#155724" }}>
+                    Account Verified
+                  </span>
+                </div>
+              )}
+
+              {/* Face Image Preview (Read-only) */}
+              {formik?.values.faceImage
+                && (
+                  <div className="bg-white border-1 p-5 text-center position-relative"
+                    style={{ marginTop: 20 }} >
+                    <button
+                      type="button"
+                      className="btn btn-danger border-0 rounded-3 position-absolute"
+                      style={{ top: 15, right: 15, padding: "5px 10px", fontSize: 12 }}
+                      onClick={() => formik.setFieldValue("faceImage", "")}
+                    >
+                      Reset Image
+                    </button>
+                    <h5 style={{ fontWeight: 600 }}>Face Image (User Uploaded)</h5>
+                    <img
+                      src={formik.values.faceImage}
+                      alt="Face"
+                      style={{
+                        width: 150,
+                        height: 150,
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                        border: "2px solid #ddd",
+                        marginTop: 10
+                      }}
+                    />
+                    <p style={{ fontSize: 13, color: "gray", marginTop: 5 }}>
+                      *Face image cannot be changed. User uploads this during face scan login.
+                    </p>
+                  </div>
+                )}
+            </div>
+          )}
+
 
           <div className="bg-white border-1 p-5 text-center" style={{ marginTop: 20 }}>
             <Dropzone onDrop={uploadImg} accept="image/*">
               {({ getRootProps, getInputProps }) => (
                 <section style={{ marginTop: 0 }}>
-                  {formik.values.image ? (
+                  {formik.values.profileImage ? (
                     <div onClick={uploadImg}>
                       {
-                        formik?.values.image ? (
-                          typeof formik.values.image === 'string' && /^https:\/\//.test(formik?.values?.image) ? (
+                        formik?.values.profileImage ? (
+                          typeof formik.values.profileImage === 'string' && /^https:\/\//.test(formik?.values?.profileImage) ? (
                             // If image URL is from the server
                             <>
-                              <h3 style={{ fontSize: 18 }}>Selected Image: {formik?.values?.image.split('/').pop()}</h3>
+                              <h3 style={{ fontSize: 18 }}>Selected Image: {formik?.values?.profileImage.split('/').pop()}</h3>
                               <img
-                                src={formik?.values?.image}
+                                src={formik?.values?.profileImage}
                                 alt="Selected"
                                 style={{ maxWidth: '100%', maxHeight: '200px' }}
                               />
@@ -414,13 +490,13 @@ const AddEmployee = () => {
                           ) : (
                             // If image is from local storage
                             <>
-                              <h3 style={{ fontSize: 18 }}>Selected Image: {formik?.values?.image?.name}</h3>
+                              <h3 style={{ fontSize: 18 }}>Selected Image: {formik?.values?.profileImage?.name}</h3>
                               <img
                                 src={
-                                  typeof formik?.values?.image === 'string'
-                                    ? formik.values.image // Use the URL if it's already uploaded
-                                    : formik?.values?.image instanceof Blob
-                                      ? URL.createObjectURL(formik.values.image) // Use object URL for preview if it's a File object
+                                  typeof formik?.values?.profileImage === 'string'
+                                    ? formik.values.profileImage // Use the URL if it's already uploaded
+                                    : formik?.values?.profileImage instanceof Blob
+                                      ? URL.createObjectURL(formik.values.profileImage) // Use object URL for preview if it's a File object
                                       : ''
                                 }
                                 alt="Selected"
@@ -441,13 +517,13 @@ const AddEmployee = () => {
             </Dropzone>
           </div>
           <div className="error">
-            {formik.touched.image && formik.errors.image}
+            {formik.touched.profileImage && formik.errors.profileImage}
           </div>
           <button
             className="btn btn-success border-0 rounded-3 my-5"
             type="submit"
           >
-            {getPCatId !== undefined ? "Edit" : "Add"} Company
+            {getPCatId !== undefined ? "Edit" : "Add"} Employee
           </button>
         </form>
       </div>

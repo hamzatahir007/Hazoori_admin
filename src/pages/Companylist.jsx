@@ -84,7 +84,7 @@ const Companylist = () => {
   for (let i = 0; i < companyState.length; i++) {
     data1.push({
       key: i + 1,
-      name: companyState[i].name,
+      name: companyState[i].name.split(" ")[0],
       description: companyState[i].description,
       email: companyState[i].email,
       address: companyState[i].address,
@@ -123,7 +123,7 @@ const Companylist = () => {
 
   return (
     <div>
-      <h3 className="mb-4 title">Products</h3>
+      <h3 className="mb-4 title">Companies</h3>
       <div>
         <Table columns={columns} dataSource={data1} />
       </div>

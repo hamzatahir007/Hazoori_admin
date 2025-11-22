@@ -4,7 +4,6 @@ import { config } from "../../utils/axiosconfig";
 
 const getAllDesignation = async () => {
   const response = await axios.get(`${base_url}designations/`, config);
-console.log('ooo');
 
   return response.data;
 };
